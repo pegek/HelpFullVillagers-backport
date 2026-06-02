@@ -118,7 +118,7 @@ Kolejność etapów (z planu, sekcja 4). Status: ⬜ TODO / 🔄 in progress / �
 | 0 | Skeleton + build.gradle + mcmod.info + @Mod stub + proxies + assets copy | ✅ | build zielony (1m6s), jar+reobf OK. Wymaga JDK 8 (gradle.properties → jdk1.8.0_361) |
 | 1 | enums (EnumActivity, EnumMessage) | ✅ | czyste liście, sama zmiana pakietu |
 | 1b | util (AIHelper, ResourceCluster) | ⬜ | **PRZESUNIĘTE** — nie są liśćmi; zależą od entity/village/inventory/crafting + ChunkCoordinates→BlockPos. Port razem z etapem 6/8 |
-| 2 | Config (Forge Configuration w preInit) | ⬜ | |
+| 2 | Config (Forge Configuration w preInit) | ✅ | API identyczne z 1.7.10; pola w klasie głównej |
 | 3 | Network layer (27 packetów, rename + main-thread scheduling) | ⬜ | |
 | 4 | Entities (AbstractVillager 1246 linii first, potem 9 profesji) | ⬜ | DataWatcher → EntityDataManager |
 | 5 | AI (11 klas EntityAIBase) | ⬜ | BlockPos / navigator / pathfinding |

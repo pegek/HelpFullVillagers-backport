@@ -2,6 +2,7 @@ package com.spege.helpfulvillagers.main;
 
 import org.apache.logging.log4j.Logger;
 
+import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -35,10 +36,25 @@ public class HelpfulVillagers {
 
     public static Logger logger;
 
+    // --- Config (Forge Configuration; layout unchanged from the 1.7.10 original) ---
+    public static Configuration config;
+    /** Death broadcast verbosity: 0 = Off, 1 = On, 2 = Verbose. */
+    public static int deathMessageOption = 1;
+    /** Birth broadcast verbosity: 0 = Off, 1 = On, 2 = Verbose. */
+    public static int birthMessageOption = 1;
+    /** When true, Archers fire without consuming arrows. */
+    public static boolean infiniteArrows = false;
+
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         logger = event.getModLog();
-        // TODO step 2: load Forge Configuration (death/birth message verbosity, infiniteArrows).
+        config = new Configuration(event.getSuggestedConfigurationFile());
+        config.load();
+        deathMessageOption = config.getInt("deathMessage", "general", 1, 0, 2, "0 - Off, 1 - On, 2 - Verbose");
+        birthMessageOption = config.getInt("birthMessage", "general", 1, 0, 2, "0 - Off, 1 - On, 2 - Verbose");
+        infiniteArrows = config.getBoolean("infiniteArrows", "archer", false,
+                "Set to true to allow Archers to shoot without using arrows");
+        config.save();
         proxy.preInit(event);
     }
 
