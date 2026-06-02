@@ -1,0 +1,13 @@
+[
+{
+  "modid": "helpfulvillagers",
+  "name": "Helpful Villagers",
+  "description": "Put those lazy villagers to work! Replaces vanilla villagers with recruitable profession villagers (lumberjack, miner, farmer, soldier, archer, merchant, fisherman, rancher) that gather, fight, craft and trade. Forward-port of WeaselNinja's 1.7.10 mod to Forge 1.12.2.",
+  "version": "1.3.1-1.12.2",
+  "mcversion": "1.12.2",
+  "url": "",
+  "authorList": ["WeaselNinja", "Isuth"],
+  "credits": "Original mod by WeaselNinja (MIT). 1.12.2 forward-port by Isuth.",
+  "dependencies": []
+}
+]

@@ -1,0 +1,54 @@
+# eclipse
+bin/
+*.launch
+.settings/
+.metadata/
+.classpath
+.project
+
+# idea
+out/
+*.ipr
+*.iws
+*.iml
+.idea/
+
+# gradle
+build/
+.gradle/
+
+# IDE
+.vscode/
+
+# other
+eclipse/
+run/
+reobf/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Files from Forge MDK
+forge*changelog.txt
+
+# Custom ignores
+*.out
+*.tmp
+mcmodsrepo/
+
+# Minecraft Runtime (anchored to repo root so they don't catch the read-only
+# 1.7.10 reference tree under helpfulvillagers/decompiled_src/mods, etc.)
+/logs/
+/crash-reports/
+/saves/
+/config/
+/mods/
+
+# Read-only 1.7.10 reference: keep decompiled .java sources + original jar,
+# but ignore the derived intermediates (raw .class dump and the slim classes jar).
+helpfulvillagers/unzipped_classes/
+helpfulvillagers/classes.jar
