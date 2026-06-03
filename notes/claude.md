@@ -122,7 +122,7 @@ Kolejność etapów (z planu, sekcja 4). Status: ⬜ TODO / 🔄 in progress / �
 | **CORE** | **Klaster SCC (jeden build na końcu)** — patrz REWIZJA niżej | 🔄 | crafting/econ → inventory → village → economy → AbstractVillager+9 → AIHelper/ResourceCluster → AI |
 | ↳ C1 | crafting/econ data (VillagerRecipe, CraftItem, ItemPrice, CraftTree, CraftQueue) | ✅(kod) | sportowane; build dopiero po całym CORE. getIngredients()+ItemStack.EMPTY |
 | ↳ C2 | InventoryVillager + ContainerInventoryVillager | ✅(kod) | IInventory pełna migracja; ItemStack.EMPTY; ItemArmor.armorType→EntityEquipmentSlot. Zależy od InventoryPacket → packet wchodzi do CORE |
-| ↳ C3 | village (HelpfulVillage, GuildHall, RanchGuildHall, HelpfulVillageCollection) | ⬜ | BlockPos; WorldSavedData |
+| ↳ C3 | village (HelpfulVillage, GuildHall, RanchGuildHall, HelpfulVillageCollection) | ✅(kod) | ChunkCoordinates→BlockPos; isSideSolid(EnumFacing); door API best-effort (VERIFY in-game); WorldSavedData.writeToNBT zwraca NBTTagCompound, getPerWorldStorage() |
 | ↳ C4 | VillageEconomy | ⬜ | |
 | ↳ C5 | AbstractVillager (1246) + 9 profesji | ⬜ | DataWatcher → EntityDataManager |
 | ↳ C6 | util/AIHelper + ResourceCluster | ⬜ | BlockPos; getDrops sig |
