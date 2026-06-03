@@ -337,14 +337,18 @@ public class HelpfulVillage {
         if (this.lastAggressor != null && this.lastAggressor instanceof IMob && this.lastAggressor.isEntityAlive()) {
             return this.lastAggressor;
         }
-        List<IMob> entities = this.world.getEntitiesWithinAABB(IMob.class, this.actualBounds);
+        // IMob is an interface (not an Entity subtype), so query living entities and filter.
+        List<EntityLivingBase> entities = this.world.getEntitiesWithinAABB(EntityLivingBase.class, this.actualBounds);
         double d0 = Double.MAX_VALUE;
         EntityLivingBase target = null;
-        for (IMob curr : entities) {
-            double d1 = entity.getDistanceSq((Entity) curr);
+        for (EntityLivingBase curr : entities) {
+            if (!(curr instanceof IMob)) {
+                continue;
+            }
+            double d1 = entity.getDistanceSq(curr);
             if (d1 < d0) {
                 d0 = d1;
-                target = (EntityLivingBase) curr;
+                target = curr;
             }
         }
         return target;

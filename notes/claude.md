@@ -119,7 +119,7 @@ Kolejność etapów (z planu, sekcja 4). Status: ⬜ TODO / 🔄 in progress / �
 | 1 | enums (EnumActivity, EnumMessage) | ✅ | czyste liście, sama zmiana pakietu |
 | 1b | util (AIHelper, ResourceCluster) | ⬜ | **PRZESUNIĘTE** — nie są liśćmi; zależą od entity/village/inventory/crafting + ChunkCoordinates→BlockPos. Port razem z etapem 6/8 |
 | 2 | Config (Forge Configuration w preInit) | ✅ | API identyczne z 1.7.10; pola w klasie głównej |
-| **CORE** | **Klaster SCC (jeden build na końcu)** — patrz REWIZJA niżej | 🔄 | crafting/econ → inventory → village → economy → AbstractVillager+9 → AIHelper/ResourceCluster → AI |
+| **CORE** | **Klaster SCC (jeden build na końcu)** — patrz REWIZJA niżej | ✅ ZIELONY | **Build + reobfJar SUCCESSFUL.** Fix-loop: tylko 2 poprawki — `WorldSavedData` import (→`net.minecraft.world.storage`) i `getEntitiesWithinAABB(IMob.class)` (IMob to interfejs, nie Entity → query EntityLivingBase + filtr instanceof). + 14 core-packetów + EntityFishHookCustom stub + wiring klasy głównej |
 | ↳ C1 | crafting/econ data (VillagerRecipe, CraftItem, ItemPrice, CraftTree, CraftQueue) | ✅(kod) | sportowane; build dopiero po całym CORE. getIngredients()+ItemStack.EMPTY |
 | ↳ C2 | InventoryVillager + ContainerInventoryVillager | ✅(kod) | IInventory pełna migracja; ItemStack.EMPTY; ItemArmor.armorType→EntityEquipmentSlot. Zależy od InventoryPacket → packet wchodzi do CORE |
 | ↳ C3 | village (HelpfulVillage, GuildHall, RanchGuildHall, HelpfulVillageCollection) | ✅(kod) | ChunkCoordinates→BlockPos; isSideSolid(EnumFacing); door API best-effort (VERIFY in-game); WorldSavedData.writeToNBT zwraca NBTTagCompound, getPerWorldStorage() |
