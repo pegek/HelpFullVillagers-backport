@@ -154,6 +154,9 @@ public class HelpfulVillagers {
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
         proxy.registerRenderers();
         proxy.init(event);
+        logger.info("[HV] init complete — vanillaRecipes={} lumberjack={} miner={} farmer={} fisherman={} rancher={}",
+                vanillaRecipes.size(), lumberjackRecipes.size(), minerRecipes.size(),
+                farmerRecipes.size(), fishermanRecipes.size(), rancherRecipes.size());
     }
 
     private void registerNetwork() {

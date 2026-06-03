@@ -252,6 +252,8 @@ public abstract class AbstractVillager extends EntityVillager {
                 HelpfulVillagers.network.sendTo(new LeaderPacket(this.getEntityId(), this.leader.getEntityId()), (EntityPlayerMP) player);
             }
         }
+        HelpfulVillagers.logger.info("[HV] processInteract: {} id={} opening GUI 0 for player {}",
+                this.getClass().getSimpleName(), this.getEntityId(), player.getName());
         player.openGui(HelpfulVillagers.instance, 0, this.world, this.getEntityId(), 0, 0);
         return true;
     }
@@ -349,6 +351,13 @@ public abstract class AbstractVillager extends EntityVillager {
     @Override
     public void onUpdate() {
         super.onUpdate();
+        // Debug: log the very first server-side tick so we know our entities are active.
+        if (!this.world.isRemote && this.ticksExisted == 1) {
+            HelpfulVillagers.logger.info("[HV] First tick: {} id={} at {},{},{} homeVillage={}",
+                    this.getClass().getSimpleName(), this.getEntityId(),
+                    (int) this.posX, (int) this.posY, (int) this.posZ,
+                    this.homeVillage != null ? this.homeVillage.initialCenter : "null");
+        }
         if (this.guiCommand >= 0) {
             try {
                 this.handleGuiCommand();
@@ -365,8 +374,16 @@ public abstract class AbstractVillager extends EntityVillager {
         } else if (!this.dayCheck && !this.world.isDaytime()) {
             this.dayCheck = true;
         }
-        this.getNewHomeVillage();
-        this.syncVillage();
+        // Throttle expensive per-villager calls to avoid flooding the server thread.
+        // getNewHomeVillage: every 40 ticks (2 s) — loops over all villages.
+        if (this.ticksExisted % 40 == 0 || this.homeVillage == null) {
+            this.getNewHomeVillage();
+        }
+        // syncVillage (VillageSyncPacket): every 20 ticks (1 s per villager).
+        // The 1.7.10 original sent this every tick, causing a severe packet flood.
+        if (this.ticksExisted % 20 == 0) {
+            this.syncVillage();
+        }
         this.getNewGuildHall();
         this.updateBoxes();
         this.updateArmor();
@@ -894,7 +911,7 @@ public abstract class AbstractVillager extends EntityVillager {
     }
 
     private void syncVillage() {
-        if (!this.world.isRemote) {
+        if (!this.world.isRemote && this.homeVillage != null) {
             HelpfulVillagers.network.sendToAll(new VillageSyncPacket(this.homeVillage, this));
         }
     }

@@ -44,6 +44,8 @@ public class CommonHooks {
         if (event.getEntity().getClass() == EntityVillager.class) {
             EntityVillager villager = (EntityVillager) event.getEntity();
             if (villager.getProfession() > -1 && villager.getProfession() < 6) {
+                HelpfulVillagers.logger.info("[HV] EntityJoinWorld: replacing vanilla villager (profession={}) at {},{},{}",
+                        villager.getProfession(), (int) villager.posX, (int) villager.posY, (int) villager.posZ);
                 EntityRegularVillager newVillager = new EntityRegularVillager(event.getWorld());
                 newVillager.setLocationAndAngles(villager.posX, villager.posY, villager.posZ, villager.rotationYaw, villager.rotationPitch);
                 if (villager.isChild()) {
@@ -172,10 +174,14 @@ public class CommonHooks {
         if (event.getWorld().isRemote || event.getWorld().provider.getDimension() != 0) {
             return;
         }
+        HelpfulVillagers.logger.info("[HV] WorldLoad: loading village collection for overworld...");
         HelpfulVillagers.villageCollection = HelpfulVillageCollection.forWorld(event.getWorld());
         if (HelpfulVillagers.villageCollection != null && !HelpfulVillagers.villageCollection.isEmpty()) {
             HelpfulVillagers.villages.clear();
             HelpfulVillagers.villages.addAll(HelpfulVillagers.villageCollection.getVillages());
+            HelpfulVillagers.logger.info("[HV] WorldLoad: loaded {} saved villages", HelpfulVillagers.villages.size());
+        } else {
+            HelpfulVillagers.logger.info("[HV] WorldLoad: no saved villages (new world or empty collection)");
         }
     }
 }
