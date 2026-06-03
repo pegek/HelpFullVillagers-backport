@@ -20,16 +20,29 @@ import com.spege.helpfulvillagers.entity.EntityMiner;
 import com.spege.helpfulvillagers.entity.EntityRancher;
 import com.spege.helpfulvillagers.entity.EntityRegularVillager;
 import com.spege.helpfulvillagers.entity.EntitySoldier;
+import com.spege.helpfulvillagers.network.AddRecipePacket;
 import com.spege.helpfulvillagers.network.CraftItemClientPacket;
+import com.spege.helpfulvillagers.network.CraftItemServerPacket;
 import com.spege.helpfulvillagers.network.CraftQueueClientPacket;
+import com.spege.helpfulvillagers.network.CraftQueueServerPacket;
 import com.spege.helpfulvillagers.network.CustomRecipesPacket;
 import com.spege.helpfulvillagers.network.FishHookPacket;
+import com.spege.helpfulvillagers.network.GUICommandPacket;
 import com.spege.helpfulvillagers.network.InventoryPacket;
+import com.spege.helpfulvillagers.network.ItemFrameEventPacket;
 import com.spege.helpfulvillagers.network.ItemPriceClientPacket;
 import com.spege.helpfulvillagers.network.ItemPriceServerPacket;
 import com.spege.helpfulvillagers.network.LeaderPacket;
+import com.spege.helpfulvillagers.network.MessageOptionsPacket;
+import com.spege.helpfulvillagers.network.NicknamePacket;
 import com.spege.helpfulvillagers.network.PlayerAccountClientPacket;
+import com.spege.helpfulvillagers.network.PlayerAccountServerPacket;
+import com.spege.helpfulvillagers.network.PlayerCraftMatrixResetPacket;
+import com.spege.helpfulvillagers.network.PlayerInventoryPacket;
+import com.spege.helpfulvillagers.network.PlayerItemStackPacket;
 import com.spege.helpfulvillagers.network.PlayerMessagePacket;
+import com.spege.helpfulvillagers.network.ProfessionChangePacket;
+import com.spege.helpfulvillagers.network.ResetRecipesPacket;
 import com.spege.helpfulvillagers.network.SaplingPacket;
 import com.spege.helpfulvillagers.network.SwingPacket;
 import com.spege.helpfulvillagers.network.UnlockedHallsPacket;
@@ -145,20 +158,33 @@ public class HelpfulVillagers {
 
     private void registerNetwork() {
         network = NetworkRegistry.INSTANCE.newSimpleChannel("HV");
-        // Discriminator ids preserved from the 1.7.10 original; gaps are the not-yet-ported packets.
+        // Discriminator ids preserved verbatim from the 1.7.10 original (all 27 packets).
         network.registerMessage(SaplingPacket.Handler.class, SaplingPacket.class, 0, Side.CLIENT);
         network.registerMessage(SwingPacket.Handler.class, SwingPacket.class, 1, Side.CLIENT);
+        network.registerMessage(ProfessionChangePacket.Handler.class, ProfessionChangePacket.class, 2, Side.SERVER);
         network.registerMessage(LeaderPacket.Handler.class, LeaderPacket.class, 3, Side.CLIENT);
+        network.registerMessage(GUICommandPacket.Handler.class, GUICommandPacket.class, 4, Side.SERVER);
         network.registerMessage(UnlockedHallsPacket.Handler.class, UnlockedHallsPacket.class, 5, Side.CLIENT);
         network.registerMessage(InventoryPacket.Handler.class, InventoryPacket.class, 6, Side.CLIENT);
+        network.registerMessage(NicknamePacket.Handler.class, NicknamePacket.class, 7, Side.SERVER);
         network.registerMessage(PlayerMessagePacket.Handler.class, PlayerMessagePacket.class, 8, Side.CLIENT);
+        network.registerMessage(MessageOptionsPacket.Handler.class, MessageOptionsPacket.class, 9, Side.CLIENT);
+        network.registerMessage(ItemFrameEventPacket.Handler.class, ItemFrameEventPacket.class, 10, Side.SERVER);
+        network.registerMessage(CraftItemServerPacket.Handler.class, CraftItemServerPacket.class, 11, Side.SERVER);
         network.registerMessage(CraftItemClientPacket.Handler.class, CraftItemClientPacket.class, 12, Side.CLIENT);
+        network.registerMessage(CraftQueueServerPacket.Handler.class, CraftQueueServerPacket.class, 13, Side.SERVER);
         network.registerMessage(CraftQueueClientPacket.Handler.class, CraftQueueClientPacket.class, 14, Side.CLIENT);
         network.registerMessage(CustomRecipesPacket.Handler.class, CustomRecipesPacket.class, 15, Side.CLIENT);
+        network.registerMessage(AddRecipePacket.Handler.class, AddRecipePacket.class, 16, Side.SERVER);
+        network.registerMessage(ResetRecipesPacket.Handler.class, ResetRecipesPacket.class, 17, Side.SERVER);
         network.registerMessage(ItemPriceClientPacket.Handler.class, ItemPriceClientPacket.class, 18, Side.CLIENT);
         network.registerMessage(ItemPriceServerPacket.Handler.class, ItemPriceServerPacket.class, 19, Side.SERVER);
         network.registerMessage(VillageSyncPacket.Handler.class, VillageSyncPacket.class, 20, Side.CLIENT);
+        network.registerMessage(PlayerInventoryPacket.Handler.class, PlayerInventoryPacket.class, 21, Side.SERVER);
+        network.registerMessage(PlayerItemStackPacket.Handler.class, PlayerItemStackPacket.class, 22, Side.SERVER);
+        network.registerMessage(PlayerCraftMatrixResetPacket.Handler.class, PlayerCraftMatrixResetPacket.class, 23, Side.SERVER);
         network.registerMessage(PlayerAccountClientPacket.Handler.class, PlayerAccountClientPacket.class, 24, Side.CLIENT);
+        network.registerMessage(PlayerAccountServerPacket.Handler.class, PlayerAccountServerPacket.class, 25, Side.SERVER);
         network.registerMessage(FishHookPacket.Handler.class, FishHookPacket.class, 26, Side.CLIENT);
     }
 
