@@ -151,8 +151,8 @@ public class HelpfulVillagers {
         this.registerNetwork();
         this.registerEntities();
         this.initVillagerRecipes();
-        // TODO step 9: NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
-        // TODO step 11: proxy.registerRenderers();  TODO step 8: proxy.registerHooks();
+        NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
+        proxy.registerRenderers();
         proxy.init(event);
     }
 
@@ -207,7 +207,7 @@ public class HelpfulVillagers {
 
     @Mod.EventHandler
     public void serverStart(FMLServerStartingEvent event) {
-        // TODO step 12: event.registerServerCommand(new VillagerMessagesCommand());
+        event.registerServerCommand(new com.spege.helpfulvillagers.command.VillagerMessagesCommand());
     }
 
     @Mod.EventHandler

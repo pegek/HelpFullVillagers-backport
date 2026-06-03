@@ -1,5 +1,6 @@
 package com.spege.helpfulvillagers.main;
 
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
@@ -10,11 +11,11 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class CommonProxy {
 
     public void preInit(FMLPreInitializationEvent event) {
-        // TODO step 8/11: register common event hooks (CommonHooks) once ported.
+        MinecraftForge.EVENT_BUS.register(new CommonHooks());
     }
 
     public void init(FMLInitializationEvent event) {
-        // no-op on the dedicated server for now
+        // no-op on the dedicated server
     }
 
     /** Registers entity renderers. No-op on the server; overridden on the client. */

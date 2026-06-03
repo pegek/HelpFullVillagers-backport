@@ -1,5 +1,6 @@
 package com.spege.helpfulvillagers.main;
 
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
@@ -12,7 +13,7 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void preInit(FMLPreInitializationEvent event) {
         super.preInit(event);
-        // TODO step 11: register entity renderers via RenderingRegistry + IRenderFactory.
+        MinecraftForge.EVENT_BUS.register(new ClientHooks());
     }
 
     @Override
@@ -22,6 +23,6 @@ public class ClientProxy extends CommonProxy {
 
     @Override
     public void registerRenderers() {
-        // TODO step 11: RenderVillagerCustom + RenderFishHookCustom.
+        // TODO step 11: RenderVillagerCustom + RenderFishHookCustom via ModelRegistryEvent/IRenderFactory.
     }
 }
