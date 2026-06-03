@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import com.spege.helpfulvillagers.ai.EntityAIFisherman;
 import com.spege.helpfulvillagers.enums.EnumActivity;
 import com.spege.helpfulvillagers.main.HelpfulVillagers;
-import com.spege.helpfulvillagers.network.FishHookPacket;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.ai.EntityAIAvoidEntity;
@@ -73,7 +72,6 @@ public class EntityFisherman extends AbstractVillager {
         if (!this.world.isRemote && this.fishEntity != null && this.currentActivity != EnumActivity.GATHER) {
             this.fishEntity.setDead();
             this.fishEntity = null;
-            HelpfulVillagers.network.sendToAll(new FishHookPacket(this.getEntityId(), true, 0, 0, 0));
         }
     }
 
@@ -116,7 +114,6 @@ public class EntityFisherman extends AbstractVillager {
         super.onDeath(src);
         if (this.fishEntity != null) {
             this.fishEntity.setDead();
-            HelpfulVillagers.network.sendToAll(new FishHookPacket(this.getEntityId(), true, 0, 0, 0));
         }
     }
 }

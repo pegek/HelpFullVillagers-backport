@@ -6,8 +6,6 @@ import java.util.Random;
 
 import com.spege.helpfulvillagers.entity.EntityFishHookCustom;
 import com.spege.helpfulvillagers.entity.EntityFisherman;
-import com.spege.helpfulvillagers.main.HelpfulVillagers;
-import com.spege.helpfulvillagers.network.FishHookPacket;
 import com.spege.helpfulvillagers.util.AIHelper;
 import com.spege.helpfulvillagers.util.ResourceCluster;
 
@@ -118,7 +116,6 @@ public class EntityAIFisherman extends EntityAIWorker {
                     this.fisherman.fishEntity = new EntityFishHookCustom(this.fisherman.world, coords.getX(), coords.getY(), coords.getZ(), this.fisherman);
                     this.fisherman.swingArm(EnumHand.MAIN_HAND);
                     this.fisherman.world.spawnEntity(this.fisherman.fishEntity);
-                    HelpfulVillagers.network.sendToAll(new FishHookPacket(this.fisherman.getEntityId(), false, coords.getX(), coords.getY(), coords.getZ()));
                     this.previousTime = 0;
                     this.currentTime = 0;
                 }
