@@ -1,0 +1,14 @@
+# Helpful Villagers - entity display names (en_US)
+# The 1.7.10 original shipped no .lang; text was hardcoded English.
+# 1.12.2 requires entity.modid.name=... for named mobs in the chat/tab-list.
+
+entity.helpfulvillagers.villager.name=Villager
+entity.helpfulvillagers.lumberjack.name=Lumberjack
+entity.helpfulvillagers.miner.name=Miner
+entity.helpfulvillagers.farmer.name=Farmer
+entity.helpfulvillagers.soldier.name=Soldier
+entity.helpfulvillagers.archer.name=Archer
+entity.helpfulvillagers.merchant.name=Merchant
+entity.helpfulvillagers.fisherman.name=Fisherman
+entity.helpfulvillagers.rancher.name=Rancher
+entity.helpfulvillagers.fish_hook.name=Fish Hook
