@@ -22,9 +22,11 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
  * Client-side proxy. Adds client-only behaviour (renderers, client event hooks)
  * on top of {@link CommonProxy}.
  *
- * <p>1.12.2: renderers registered via {@link RenderingRegistry#registerEntityRenderingHandler}
- * with an {@code IRenderFactory} lambda (one registration per concrete entity class because
- * Forge dispatches by exact runtime class).
+ * <p>1.12.2: entity renderers MUST be registered in {@code preInit} (before the RenderManager
+ * caches its renderer map) via {@link RenderingRegistry#registerEntityRenderingHandler} with an
+ * {@code IRenderFactory} lambda. Registering in {@code init} is too late and the entities fall back
+ * to the vanilla RenderVillager. One registration per concrete entity class (Forge dispatches by
+ * exact runtime class).
  */
 public class ClientProxy extends CommonProxy {
 
@@ -32,6 +34,7 @@ public class ClientProxy extends CommonProxy {
     public void preInit(FMLPreInitializationEvent event) {
         super.preInit(event);
         MinecraftForge.EVENT_BUS.register(new ClientHooks());
+        this.registerRenderers();
     }
 
     @Override
@@ -51,5 +54,6 @@ public class ClientProxy extends CommonProxy {
         RenderingRegistry.registerEntityRenderingHandler(EntityFisherman.class,       m -> new RenderVillagerCustom(m));
         RenderingRegistry.registerEntityRenderingHandler(EntityRancher.class,         m -> new RenderVillagerCustom(m));
         RenderingRegistry.registerEntityRenderingHandler(EntityFishHookCustom.class,  m -> new RenderFishHookCustom(m));
+        HelpfulVillagers.logger.info("[HV] registerRenderers: registered 10 entity renderers (preInit)");
     }
 }

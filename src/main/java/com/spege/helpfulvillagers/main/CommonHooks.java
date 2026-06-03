@@ -119,6 +119,11 @@ public class CommonHooks {
                         }
                         HelpfulVillage currentVillage = HelpfulVillagers.villages.get(i);
                         HelpfulVillage otherVillage = HelpfulVillagers.villages.get(j);
+                        // A freshly created village has null actualBounds until updateVillageBox()
+                        // runs later in this tick; skip it in the merge pass to avoid an NPE.
+                        if (currentVillage.actualBounds == null || otherVillage.actualBounds == null) {
+                            continue;
+                        }
                         if (!currentVillage.actualBounds.intersects(otherVillage.actualBounds)) {
                             continue;
                         }

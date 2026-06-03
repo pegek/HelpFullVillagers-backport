@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Helpful Villagers log filter — extract only relevant entries from Minecraft/FML logs.
+Helpful Villagers log filter - extract only relevant entries from Minecraft/FML logs.
 
 Usage:
   python filter_log.py latest.log [output.txt]
@@ -94,14 +95,19 @@ def main():
             all_lines.extend(lines)
 
     if not all_lines:
-        all_lines = ['[filter] No relevant entries found — mod ran cleanly or produced no output.']
+        all_lines = ['[filter] No relevant entries found - mod ran cleanly or produced no output.']
 
     text = '\n'.join(all_lines)
     if output_path:
         output_path.write_text(text, encoding='utf-8')
         print(f"[filter] Wrote {len(all_lines)} lines to {output_path}")
     else:
-        print(text)
+        # Encode safely for legacy Windows consoles (cp932/cp1250) to avoid UnicodeEncodeError.
+        try:
+            sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        except (AttributeError, ValueError):
+            pass
+        print(text.encode('ascii', 'replace').decode('ascii'))
 
 
 if __name__ == '__main__':

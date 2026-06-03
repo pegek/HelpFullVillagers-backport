@@ -152,7 +152,8 @@ public class HelpfulVillagers {
         this.registerEntities();
         this.initVillagerRecipes();
         NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
-        proxy.registerRenderers();
+        // NOTE: entity renderers are registered in ClientProxy.preInit (must run before the
+        // RenderManager caches its map); do NOT register them here in init.
         proxy.init(event);
         logger.info("[HV] init complete — vanillaRecipes={} lumberjack={} miner={} farmer={} fisherman={} rancher={}",
                 vanillaRecipes.size(), lumberjackRecipes.size(), minerRecipes.size(),
