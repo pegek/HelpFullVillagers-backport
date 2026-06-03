@@ -123,7 +123,7 @@ Kolejność etapów (z planu, sekcja 4). Status: ⬜ TODO / 🔄 in progress / �
 | ↳ C1 | crafting/econ data (VillagerRecipe, CraftItem, ItemPrice, CraftTree, CraftQueue) | ✅(kod) | sportowane; build dopiero po całym CORE. getIngredients()+ItemStack.EMPTY |
 | ↳ C2 | InventoryVillager + ContainerInventoryVillager | ✅(kod) | IInventory pełna migracja; ItemStack.EMPTY; ItemArmor.armorType→EntityEquipmentSlot. Zależy od InventoryPacket → packet wchodzi do CORE |
 | ↳ C3 | village (HelpfulVillage, GuildHall, RanchGuildHall, HelpfulVillageCollection) | ✅(kod) | ChunkCoordinates→BlockPos; isSideSolid(EnumFacing); door API best-effort (VERIFY in-game); WorldSavedData.writeToNBT zwraca NBTTagCompound, getPerWorldStorage() |
-| ↳ C4 | VillageEconomy | ⬜ | |
+| ↳ C4 | VillageEconomy | ✅(kod) | **Thread→synchroniczne** (off-thread world access niebezpieczny w 1.12.2); CFR rozwalił initPrices (zrekonstruowane); canSilkHarvest protected→pominięte; CraftingManager.REGISTRY; getName() dla kont; getDrops(NonNullList,...) |
 | ↳ C5 | AbstractVillager (1246) + 9 profesji | ⬜ | DataWatcher → EntityDataManager |
 | ↳ C6 | util/AIHelper + ResourceCluster | ⬜ | BlockPos; getDrops sig |
 | ↳ C7 | AI (11 klas EntityAIBase) | ⬜ | navigator/pathfinding |
