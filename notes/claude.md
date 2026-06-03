@@ -124,7 +124,7 @@ Kolejność etapów (z planu, sekcja 4). Status: ⬜ TODO / 🔄 in progress / �
 | ↳ C2 | InventoryVillager + ContainerInventoryVillager | ✅(kod) | IInventory pełna migracja; ItemStack.EMPTY; ItemArmor.armorType→EntityEquipmentSlot. Zależy od InventoryPacket → packet wchodzi do CORE |
 | ↳ C3 | village (HelpfulVillage, GuildHall, RanchGuildHall, HelpfulVillageCollection) | ✅(kod) | ChunkCoordinates→BlockPos; isSideSolid(EnumFacing); door API best-effort (VERIFY in-game); WorldSavedData.writeToNBT zwraca NBTTagCompound, getPerWorldStorage() |
 | ↳ C4 | VillageEconomy | ✅(kod) | **Thread→synchroniczne** (off-thread world access niebezpieczny w 1.12.2); CFR rozwalił initPrices (zrekonstruowane); canSilkHarvest protected→pominięte; CraftingManager.REGISTRY; getName() dla kont; getDrops(NonNullList,...) |
-| ↳ C5 | AbstractVillager (1246) + 9 profesji | ⬜ | DataWatcher → EntityDataManager |
+| ↳ C5 | AbstractVillager (1246) + 9 profesji | ✅(kod) | wszystkie 9: Regular/Lumberjack już były; Miner/Farmer/Soldier/Archer/Merchant/Fisherman/Rancher dodane. SRG itemy/bloki z fields.csv. Rancher: osobne `getValidAnimals()` (ArrayList<EntityAnimal>) zamiast raw ArrayList; `getValidCoords()`→null. Fisherman: usunięto client-only `getItemIcon`/`IIcon` (brak w 1.12.2, render w rendererze). Miner: ChunkCoordinates→BlockPos w shaft/dig/tunnel/return, DamageSource.IN_WALL, Mineshaft NBT |
 | ↳ C6 | util/AIHelper + ResourceCluster | ⬜ | BlockPos; getDrops sig |
 | ↳ C7 | AI (11 klas EntityAIBase) | ⬜ | navigator/pathfinding |
 | 3 | Network layer (27 packetów, rename + main-thread scheduling) — **po CORE** | ⬜ | |
