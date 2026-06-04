@@ -192,6 +192,11 @@ public abstract class AbstractVillager extends EntityVillager {
 
     private void addAI() {
         this.tasks.taskEntries.clear();
+        // The visual equipment slots mirror the villager's own inventory items; the mod drops the
+        // inventory itself on death, so disable vanilla equipment drops to avoid duplicating them.
+        for (EntityEquipmentSlot slot : EntityEquipmentSlot.values()) {
+            this.setDropChance(slot, 0.0f);
+        }
         if (this.getNavigator() instanceof PathNavigateGround) {
             PathNavigateGround nav = (PathNavigateGround) this.getNavigator();
             nav.setBreakDoors(true);
@@ -779,8 +784,22 @@ public abstract class AbstractVillager extends EntityVillager {
         }
     }
 
+    /**
+     * Pushes the villager's held tool + worn armour into the vanilla equipment slots so they render
+     * on the model.
+     *
+     * <p>Server-side ONLY: the vanilla entity tracker syncs these six slots to every watching client
+     * automatically (SPacketEntityEquipment). Running this on the client too (onUpdate fires on both
+     * sides) made the client overwrite the tracker-synced equipment with its own — often stale/empty —
+     * inventory copy, so nothing rendered. We also no longer push a per-tick InventoryPacket here (that
+     * was a packet flood); the inventory GUI gets a full sync via {@link InventoryVillager#syncInventory}
+     * when it is opened.
+     */
     private void updateArmor() {
-        this.inventory.syncEquipment();
+        if (this.world.isRemote) {
+            return;
+        }
+        this.setItemStackToSlot(EntityEquipmentSlot.MAINHAND, this.inventory.getCurrentItem());
         this.setItemStackToSlot(EntityEquipmentSlot.HEAD, this.inventory.getStackInSlot(28));
         this.setItemStackToSlot(EntityEquipmentSlot.CHEST, this.inventory.getStackInSlot(29));
         this.setItemStackToSlot(EntityEquipmentSlot.LEGS, this.inventory.getStackInSlot(30));
