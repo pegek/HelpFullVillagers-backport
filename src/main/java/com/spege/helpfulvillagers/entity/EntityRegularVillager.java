@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.registry.VillagerRegistry;
 
 /** A plain (profession 0) villager: no job, drops any held tool, flees zombies. */
 @SuppressWarnings("null")
@@ -31,9 +32,18 @@ public class EntityRegularVillager extends AbstractVillager {
         this.profName = "Villager";
         this.homeGuildHall = null;
         this.dropFlag = false;
-        if (!this.world.isRemote && this.homeVillage != null) {
-            BlockPos center = this.homeVillage.getActualCenter();
-            this.setHomePosAndDistance(center, (int) ((float) this.homeVillage.getVillageRadius() / 0.6f));
+        if (!this.world.isRemote) {
+            // Assign a random vanilla profession (farmer/librarian/priest/blacksmith/butcher; ids 0-4,
+            // excluding nitwit) so the "Trade" dialog opens normal villager trades with full career
+            // variety (fletcher, cleric, etc.). getProfession() stays the mod's custom 0, but the forge
+            // profession set here drives vanilla trade population (getProfessionForge/populateBuyingList).
+            // Villagers loaded from disk have this overwritten by super.readEntityFromNBT (ProfessionName),
+            // so a saved profession/career persists across reloads.
+            this.setProfession(VillagerRegistry.getById(this.getRNG().nextInt(5)));
+            if (this.homeVillage != null) {
+                BlockPos center = this.homeVillage.getActualCenter();
+                this.setHomePosAndDistance(center, (int) ((float) this.homeVillage.getVillageRadius() / 0.6f));
+            }
         }
     }
 

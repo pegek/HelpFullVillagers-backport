@@ -554,8 +554,17 @@ public abstract class AbstractVillager extends EntityVillager {
         return this.leader;
     }
 
+    /**
+     * Regular (profession 0) villagers fall back to the vanilla trade system (their forge profession
+     * is assigned at spawn in {@link EntityRegularVillager}), so the "Trade" dialog button opens normal
+     * villager trades. Worker professions have no vanilla trades — they use the custom barter/economy
+     * system instead — so they return null here.
+     */
     @Override
     public MerchantRecipeList getRecipes(EntityPlayer player) {
+        if (this.profession == 0) {
+            return super.getRecipes(player);
+        }
         return null;
     }
 
