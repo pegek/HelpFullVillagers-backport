@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.spege.helpfulvillagers.crafting.CraftItem;
 import com.spege.helpfulvillagers.entity.EntityMiner;
 import com.spege.helpfulvillagers.enums.EnumActivity;
+import com.spege.helpfulvillagers.main.HelpfulVillagers;
 import com.spege.helpfulvillagers.util.AIHelper;
 import com.spege.helpfulvillagers.util.ResourceCluster;
 
@@ -58,15 +59,32 @@ public class EntityAIMiner extends EntityAIWorker {
         this.setMutexBits(1);
     }
 
+    // ---- Diagnostic logging (temporary) -------------------------------------------------------
+    // Deduped: only emits when the message text changes, so per-tick phases don't flood the log.
+    // All lines are tagged [HV][MINER] and picked up by notes/logs/filter_log.py.
+    private String lastLog = "";
+
+    private void log(String msg) {
+        if (this.miner.world.isRemote || msg.equals(this.lastLog)) {
+            return;
+        }
+        this.lastLog = msg;
+        HelpfulVillagers.logger.info("[HV][MINER] id={} act={} pos={},{},{} | {}",
+                this.miner.getEntityId(), this.miner.currentActivity,
+                (int) this.miner.posX, (int) this.miner.posY, (int) this.miner.posZ, msg);
+    }
+    // ------------------------------------------------------------------------------------------
+
     @Override
     protected boolean idle() {
         this.villager.currentActivity = EnumActivity.IDLE;
         if (!this.villager.world.isRemote && this.villager.homeVillage == null) {
-            System.out.println("No Home Village");
+            this.log("IDLE: blocked — no home village");
             return false;
         }
         this.villager.checkGuildHall();
         if (this.villager.homeGuildHall == null) {
+            this.log("IDLE: blocked — no guild hall (need a pickaxe item-frame next to a door)");
             return false;
         }
         if (this.villager.currentCraftItem != null && this.villager.currentCraftItem.getPriority() >= 1) {
@@ -85,13 +103,17 @@ public class EntityAIMiner extends EntityAIWorker {
             }
         }
         if (this.villager.inventory.isFull() || !this.villager.hasTool) {
+            this.log("IDLE: inventoryFull=" + this.villager.inventory.isFull() + " hasTool=" + this.villager.hasTool
+                    + " nearHall=" + this.villager.nearHall() + " -> heading to store/return");
             if (this.villager.nearHall()) {
                 if (this.villager.currentCraftItem != null && !this.craftCheck) {
+                    this.log("IDLE -> CRAFT (near hall, have craft item)");
                     this.villager.currentActivity = EnumActivity.CRAFT;
                     this.craftCheck = true;
                     return true;
                 }
                 if (!this.villager.inventory.isEmpty() || !this.villager.hasTool) {
+                    this.log("IDLE -> STORE (near hall)");
                     this.villager.currentActivity = EnumActivity.STORE;
                     this.craftCheck = false;
                     return true;
@@ -99,15 +121,18 @@ public class EntityAIMiner extends EntityAIWorker {
                 this.craftCheck = false;
                 return false;
             }
+            this.log("IDLE -> RETURN (not near hall)");
             this.mReturn();
             this.craftCheck = false;
             return false;
         }
         if (this.villager.world.isDaytime()) {
+            this.log("IDLE -> GATHER (daytime, has tool, inventory not full)");
             this.villager.currentActivity = EnumActivity.GATHER;
             this.craftCheck = false;
             return true;
         }
+        this.log("IDLE: nighttime — staying/returning");
         if (!this.villager.nearHall()) {
             this.mReturn();
             this.craftCheck = false;
@@ -130,25 +155,34 @@ public class EntityAIMiner extends EntityAIWorker {
     @Override
     protected boolean gather() {
         if (this.miner.topCoords == null) {
+            this.log("GATHER/findMine: searching for a mine site (target=" + this.miner.target + ")");
             this.findMine();
         } else if (this.miner.shaftCoords.isEmpty()) {
+            this.log("GATHER/buildStairs: from top=" + this.miner.topCoords + " dir=" + this.miner.topDir);
             this.buildStairs(this.miner.topCoords, this.miner.topDir);
+            this.log("GATHER/buildStairs: built staircase, steps=" + this.miner.shaftCoords.size());
         } else if (!this.skipResource) {
             if (this.miner.currentResource == null) {
                 this.getNewResource();
             }
             if (this.miner.currentResource == null) {
+                this.log("GATHER/dig: no ore yet, shaftIdx=" + this.miner.shaftIndex + "/" + this.miner.shaftCoords.size()
+                        + " returnPath=" + this.miner.returnPath.size());
                 if (this.miner.returnPath.isEmpty()) {
                     this.digSection(this.miner.shaftIndex, true);
                 } else {
                     this.digTunnel(true);
                 }
             } else if (!this.miner.tunnelCoords.isEmpty()) {
+                this.log("GATHER/digTunnel: tunneling to ore, blocksLeft=" + this.miner.tunnelCoords.size());
                 this.digTunnel(false);
             } else {
+                int left = this.miner.currentResource.blockCluster == null ? 0 : this.miner.currentResource.blockCluster.size();
+                this.log("GATHER/mineResource: mining vein at " + this.miner.currentResource.coords + " blocksLeft=" + left);
                 this.mineResource();
             }
         } else {
+            this.log("GATHER/skipResource: hit lava earlier, digging back to shaft (returnPath=" + this.miner.returnPath.size() + ")");
             if (this.miner.returnPath.isEmpty()) {
                 this.digSection(this.miner.shaftIndex, true);
             } else {
@@ -166,6 +200,7 @@ public class EntityAIMiner extends EntityAIWorker {
         if (this.miner.homeGuildHall == null) {
             return this.idle();
         }
+        this.log("STORE: depositing at hall (inventoryEmpty=" + this.miner.inventory.isEmpty() + " hasTool=" + this.miner.hasTool + ")");
         TileEntityChest chest = this.miner.homeGuildHall.getAvailableChest();
         if (!this.miner.inventory.isEmpty() || !this.miner.hasTool) {
             if (chest != null) {
@@ -214,6 +249,8 @@ public class EntityAIMiner extends EntityAIWorker {
                 lowestPrice = price;
                 lowestItem = item;
             }
+            this.log("STORE: no tool — queued crafting of " + (lowestItem.isEmpty() ? "EMPTY/none" : lowestItem.getDisplayName())
+                    + " (price=" + (lowestPrice == Integer.MAX_VALUE ? "n/a" : lowestPrice) + ")");
             this.miner.addCraftItem(new CraftItem(lowestItem, this.miner));
             this.miner.queuedTool = lowestItem;
         } else if (this.miner.hasTool) {
@@ -228,6 +265,7 @@ public class EntityAIMiner extends EntityAIWorker {
         }
         this.miner.tunnelCoords.clear();
         if (this.miner.topCoords != null && this.miner.shaftIndex > 0) {
+            this.log("mReturn: TELEPORTING from y=" + (int) this.miner.posY + " to shaft top " + this.miner.topCoords);
             this.miner.setLocationAndAngles(this.miner.topCoords.getX(), this.miner.topCoords.getY(),
                     this.miner.topCoords.getZ(), 0.0f, 0.0f);
             this.miner.shaftIndex = 0;
@@ -256,6 +294,7 @@ public class EntityAIMiner extends EntityAIWorker {
                 this.miner.topCoords = currCoords;
                 this.miner.topDir = this.miner.getDirection();
                 this.miner.lastResource = new ResourceCluster(this.miner.world, this.miner.topCoords);
+                this.log("findMine: FOUND mine site (stone) at " + currCoords + " dir=" + this.miner.topDir);
             } else {
                 // Guard: new ItemStack(AIR) / blocks without an item form yield an empty stack, and
                 // 1.12.2 OreDictionary.getOreIDs throws "Stack can not be invalid!" on empty stacks.
@@ -270,6 +309,7 @@ public class EntityAIMiner extends EntityAIWorker {
                         this.miner.topCoords = currCoords;
                         this.miner.topDir = this.miner.getDirection();
                         this.miner.lastResource = new ResourceCluster(this.miner.world, this.miner.topCoords);
+                        this.log("findMine: FOUND mine site (ore '" + name + "') at " + currCoords);
                         break;
                     }
                 }
@@ -285,6 +325,7 @@ public class EntityAIMiner extends EntityAIWorker {
                 if (!block.equals(Blocks.WATER) && !block.equals(Blocks.LAVA)) {
                     continue;
                 }
+                this.log("findMine: reached target but water/lava nearby — picking a new target");
                 this.miner.target = null;
                 return;
             }
@@ -294,6 +335,7 @@ public class EntityAIMiner extends EntityAIWorker {
             }
             this.miner.topCoords = topCoords;
             this.miner.topDir = this.miner.getDirection();
+            this.log("findMine: reached target, set mine site at ground " + topCoords);
         }
     }
 
@@ -463,7 +505,11 @@ public class EntityAIMiner extends EntityAIWorker {
         if (closestValidCluster != null) {
             this.miner.currentResource = closestValidCluster;
             this.miner.currentResource.buildCluster();
+            this.log("getNewResource: found ore vein at " + closestValidCluster.coords
+                    + " cluster=" + this.miner.currentResource.blockCluster.size());
             this.buildTunnel();
+        } else {
+            this.log("getNewResource: no ore in search box (" + boxCoords.size() + " candidates) — will keep digging shaft");
         }
     }
 
@@ -512,6 +558,7 @@ public class EntityAIMiner extends EntityAIWorker {
                 if (!checkBlock.equals(Blocks.LAVA)) {
                     continue;
                 }
+                this.log("digTunnel: LAVA adjacent at " + check + " — abandoning vein, skipResource=true");
                 this.miner.tunnelCoords.clear();
                 this.skipResource = true;
                 this.miner.currentResource = null;
@@ -689,6 +736,7 @@ public class EntityAIMiner extends EntityAIWorker {
                         }
                     }
                 } else {
+                    this.log("mineResource: vein depleted — clearing currentResource");
                     this.miner.currentResource = null;
                     this.previousTime = 0;
                     this.currentTime = 0;
@@ -696,6 +744,7 @@ public class EntityAIMiner extends EntityAIWorker {
             }
         } else if (AIHelper.findDistance((int) this.miner.posX, currentCoords.getX()) > 10
                 || AIHelper.findDistance((int) this.miner.posZ, currentCoords.getZ()) > 10) {
+            this.log("mineResource: vein >10 blocks away (" + currentCoords + ") — repathing");
             this.miner.moveTo(currentCoords, this.speed);
             shouldSwing = false;
         }
