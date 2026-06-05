@@ -160,7 +160,12 @@ public class EntityMiner extends AbstractVillager {
         for (int x = (int) box.minX; x <= box.maxX; ++x) {
             for (int z = (int) box.minZ; z <= box.maxZ; ++z) {
                 Block block = this.world.getBlockState(new BlockPos(x, (int) this.posY, z)).getBlock();
-                int[] oreDictIDs = OreDictionary.getOreIDs(new ItemStack(block));
+                // Guard: empty stacks (air / itemless blocks) make 1.12.2 getOreIDs throw.
+                ItemStack blockStack = new ItemStack(block);
+                if (blockStack.isEmpty()) {
+                    continue;
+                }
+                int[] oreDictIDs = OreDictionary.getOreIDs(blockStack);
                 for (int j = 0; j < oreDictIDs.length; ++j) {
                     String name = OreDictionary.getOreName(oreDictIDs[j]);
                     if (!name.contains("ore")) {

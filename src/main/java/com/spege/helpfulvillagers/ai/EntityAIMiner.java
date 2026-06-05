@@ -257,16 +257,21 @@ public class EntityAIMiner extends EntityAIWorker {
                 this.miner.topDir = this.miner.getDirection();
                 this.miner.lastResource = new ResourceCluster(this.miner.world, this.miner.topCoords);
             } else {
-                int[] oreDictIDs = OreDictionary.getOreIDs(new ItemStack(currBlock));
-                for (int j = 0; j < oreDictIDs.length; ++j) {
-                    String name = OreDictionary.getOreName(oreDictIDs[j]);
-                    if (!name.contains("ore")) {
-                        continue;
+                // Guard: new ItemStack(AIR) / blocks without an item form yield an empty stack, and
+                // 1.12.2 OreDictionary.getOreIDs throws "Stack can not be invalid!" on empty stacks.
+                ItemStack blockStack = new ItemStack(currBlock);
+                if (!blockStack.isEmpty()) {
+                    int[] oreDictIDs = OreDictionary.getOreIDs(blockStack);
+                    for (int j = 0; j < oreDictIDs.length; ++j) {
+                        String name = OreDictionary.getOreName(oreDictIDs[j]);
+                        if (!name.contains("ore")) {
+                            continue;
+                        }
+                        this.miner.topCoords = currCoords;
+                        this.miner.topDir = this.miner.getDirection();
+                        this.miner.lastResource = new ResourceCluster(this.miner.world, this.miner.topCoords);
+                        break;
                     }
-                    this.miner.topCoords = currCoords;
-                    this.miner.topDir = this.miner.getDirection();
-                    this.miner.lastResource = new ResourceCluster(this.miner.world, this.miner.topCoords);
-                    break;
                 }
             }
         }
