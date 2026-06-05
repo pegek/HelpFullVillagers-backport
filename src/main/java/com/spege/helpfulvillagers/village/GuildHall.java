@@ -250,10 +250,11 @@ public class GuildHall {
             int x = currentCoords.getX();
             int y = currentCoords.getY();
             int z = currentCoords.getZ();
+            // Fixed: symmetric 6-neighbour flood-fill. The 1.7.10 original's +X neighbour spuriously
+            // offset Z by +1, so the interior fill leaked diagonally along one branch.
             this.checkYDirection(new BlockPos(x, y + direction, z), direction);
             this.checkXDirection(new BlockPos(x - 1, y, z), -1);
-            // NOTE: the original's +X neighbour here also offsets Z by +1; preserved verbatim.
-            this.checkXDirection(new BlockPos(x + 1, y, z + 1), 1);
+            this.checkXDirection(new BlockPos(x + 1, y, z), 1);
             this.checkZDirection(new BlockPos(x, y, z - 1), -1);
             this.checkZDirection(new BlockPos(x, y, z + 1), 1);
         }
@@ -269,12 +270,15 @@ public class GuildHall {
             int x = currentCoords.getX();
             int y = currentCoords.getY();
             int z = currentCoords.getZ();
-            // NOTE: the original calls checkXDirection for the +Z neighbour here; preserved verbatim.
-            this.checkXDirection(new BlockPos(x, y, z + direction), direction);
+            // Fixed: symmetric 6-neighbour flood-fill. The 1.7.10 original swapped the X/Z methods here
+            // (continued Z via checkXDirection and branched X via checkZDirection), so the wall-solidity
+            // check (canContinue uses the per-axis face) tested the wrong face and the fill mis-shaped
+            // along Z corridors. Each neighbour now uses its own axis method.
+            this.checkZDirection(new BlockPos(x, y, z + direction), direction);
             this.checkYDirection(new BlockPos(x, y - 1, z), -1);
             this.checkYDirection(new BlockPos(x, y + 1, z), 1);
-            this.checkZDirection(new BlockPos(x - 1, y, z), -1);
-            this.checkZDirection(new BlockPos(x + 1, y, z), 1);
+            this.checkXDirection(new BlockPos(x - 1, y, z), -1);
+            this.checkXDirection(new BlockPos(x + 1, y, z), 1);
         }
     }
 
