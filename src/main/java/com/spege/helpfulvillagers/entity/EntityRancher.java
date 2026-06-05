@@ -10,7 +10,7 @@ import com.spege.helpfulvillagers.village.RanchGuildHall;
 
 import net.minecraft.entity.ai.EntityAIAvoidEntity;
 import net.minecraft.entity.ai.EntityAIRestrictOpenDoor;
-import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemLead;
@@ -57,7 +57,7 @@ public class EntityRancher extends AbstractVillager {
         if (this.getNavigator() instanceof PathNavigateGround) {
             ((PathNavigateGround) this.getNavigator()).setBreakDoors(false);
         }
-        this.tasks.addTask(1, new EntityAIAvoidEntity<EntityZombie>(this, EntityZombie.class, 8.0f, 0.3, 0.35));
+        this.tasks.addTask(1, new EntityAIAvoidEntity<EntityMob>(this, EntityMob.class, 8.0f, 0.3, 0.35));
         this.tasks.addTask(2, new EntityAIRancher(this));
         this.tasks.addTask(3, new EntityAIRestrictOpenDoor(this));
     }

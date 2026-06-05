@@ -12,7 +12,7 @@ import com.spege.helpfulvillagers.util.ConstructionSite;
 import net.minecraft.block.Block;
 import net.minecraft.entity.ai.EntityAIAvoidEntity;
 import net.minecraft.entity.ai.EntityAIRestrictOpenDoor;
-import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemSpade;
@@ -55,7 +55,7 @@ public class EntityBuilder extends AbstractVillager {
 
     private void addThisAI() {
         ((net.minecraft.pathfinding.PathNavigateGround)this.getNavigator()).setBreakDoors(false);
-        this.tasks.addTask(1, new EntityAIAvoidEntity<EntityZombie>(this, EntityZombie.class, 8.0f, 0.3D, 0.35D));
+        this.tasks.addTask(1, new EntityAIAvoidEntity<EntityMob>(this, EntityMob.class, 8.0f, 0.3D, 0.35D));
         this.tasks.addTask(2, new EntityAIBuilder(this));
         this.tasks.addTask(3, new EntityAIRestrictOpenDoor(this));
     }

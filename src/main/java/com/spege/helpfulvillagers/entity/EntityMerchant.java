@@ -6,7 +6,7 @@ import com.spege.helpfulvillagers.enums.EnumActivity;
 
 import net.minecraft.entity.ai.EntityAIAvoidEntity;
 import net.minecraft.entity.ai.EntityAIRestrictOpenDoor;
-import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.item.ItemStack;
 import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.util.math.BlockPos;
@@ -38,7 +38,7 @@ public class EntityMerchant extends AbstractVillager {
         if (this.getNavigator() instanceof PathNavigateGround) {
             ((PathNavigateGround) this.getNavigator()).setBreakDoors(false);
         }
-        this.tasks.addTask(1, new EntityAIAvoidEntity<EntityZombie>(this, EntityZombie.class, 8.0f, 0.3, 0.35));
+        this.tasks.addTask(1, new EntityAIAvoidEntity<EntityMob>(this, EntityMob.class, 8.0f, 0.3, 0.35));
         this.tasks.addTask(3, new EntityAIRestrictOpenDoor(this));
     }
 

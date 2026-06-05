@@ -13,7 +13,7 @@ import net.minecraft.block.BlockLog;
 import net.minecraft.entity.ai.EntityAIAvoidEntity;
 import net.minecraft.entity.ai.EntityAIRestrictOpenDoor;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemAxe;
@@ -77,7 +77,7 @@ public class EntityLumberjack extends AbstractVillager {
         if (this.getNavigator() instanceof PathNavigateGround) {
             ((PathNavigateGround) this.getNavigator()).setBreakDoors(false);
         }
-        this.tasks.addTask(1, new EntityAIAvoidEntity<EntityZombie>(this, EntityZombie.class, 8.0f, 0.3, 0.35));
+        this.tasks.addTask(1, new EntityAIAvoidEntity<EntityMob>(this, EntityMob.class, 8.0f, 0.3, 0.35));
         this.tasks.addTask(2, new EntityAILumberjack(this));
         this.tasks.addTask(3, new EntityAIRestrictOpenDoor(this));
     }
