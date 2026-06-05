@@ -1,6 +1,7 @@
 package com.spege.helpfulvillagers.main;
 
 import com.spege.helpfulvillagers.entity.EntityArcher;
+import com.spege.helpfulvillagers.entity.EntityBuilder;
 import com.spege.helpfulvillagers.entity.EntityFarmer;
 import com.spege.helpfulvillagers.entity.EntityFishHookCustom;
 import com.spege.helpfulvillagers.entity.EntityFisherman;
@@ -10,6 +11,7 @@ import com.spege.helpfulvillagers.entity.EntityMiner;
 import com.spege.helpfulvillagers.entity.EntityRancher;
 import com.spege.helpfulvillagers.entity.EntityRegularVillager;
 import com.spege.helpfulvillagers.entity.EntitySoldier;
+import com.spege.helpfulvillagers.renderer.RenderBuilder;
 import com.spege.helpfulvillagers.renderer.RenderFishHookCustom;
 import com.spege.helpfulvillagers.renderer.RenderVillagerCustom;
 
@@ -53,7 +55,8 @@ public class ClientProxy extends CommonProxy {
         RenderingRegistry.registerEntityRenderingHandler(EntityMerchant.class,        m -> new RenderVillagerCustom(m));
         RenderingRegistry.registerEntityRenderingHandler(EntityFisherman.class,       m -> new RenderVillagerCustom(m));
         RenderingRegistry.registerEntityRenderingHandler(EntityRancher.class,         m -> new RenderVillagerCustom(m));
-        RenderingRegistry.registerEntityRenderingHandler(EntityFishHookCustom.class,  m -> new RenderFishHookCustom(m));
+        RenderingRegistry.registerEntityRenderingHandler(EntityBuilder.class, manager -> new RenderBuilder(manager));
+        RenderingRegistry.registerEntityRenderingHandler(EntityFishHookCustom.class, manager -> new RenderFishHookCustom(manager));
         HelpfulVillagers.logger.info("[HV] registerRenderers: registered 10 entity renderers (preInit)");
     }
 }

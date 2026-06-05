@@ -77,7 +77,8 @@ public class GuiProfessionDialog extends GuiScreen {
         this.buttonList.add(new GuiButton(5, posX + 120, posY + 30, 100, 20, "Archer"));
         this.buttonList.add(new GuiButton(6, posX + 120, posY + 55, 100, 20, "Merchant"));
         this.buttonList.add(new GuiButton(7, posX + 120, posY + 80, 100, 20, "Fisherman"));
-        this.buttonList.add(new GuiButton(8, posX + 60, posY + 105, 100, 20, "Rancher"));
+        this.buttonList.add(new GuiButton(8, posX + 10, posY + 105, 100, 20, "Rancher"));
+        this.buttonList.add(new GuiButton(9, posX + 120, posY + 105, 100, 20, "Builder"));
     }
 
     @Override

@@ -349,6 +349,16 @@ public abstract class AbstractVillager extends EntityVillager {
                 player.openGui(HelpfulVillagers.instance, 7, this.world, this.getEntityId(), 0, 0);
                 break;
             }
+            case 9: {
+                if (!this.world.isRemote) {
+                    player.displayVillagerTradeGui(this);
+                }
+                break;
+            }
+            case 10: {
+                player.openGui(HelpfulVillagers.instance, 8, this.world, this.getEntityId(), 0, 0);
+                break;
+            }
         }
         this.guiCommand = -1;
     }
@@ -498,6 +508,9 @@ public abstract class AbstractVillager extends EntityVillager {
                 break;
             case 8:
                 replacement = new EntityRancher(this);
+                break;
+            case 9:
+                replacement = new EntityBuilder(this);
                 break;
             default:
                 return;
@@ -968,13 +981,16 @@ public abstract class AbstractVillager extends EntityVillager {
         if (this.homeGuildHall == null) {
             return false;
         }
-        BlockPos currentPosition = new BlockPos((int) this.posX, (int) this.posY, (int) this.posZ);
-        if (this.homeGuildHall.insideCoords.contains(currentPosition)) {
-            return true;
-        }
-        for (BlockPos i : AIHelper.getAdjacentCoords(currentPosition)) {
-            if (this.homeGuildHall.insideCoords.contains(i)) {
-                return true;
+        int px = (int) this.posX, py = (int) this.posY, pz = (int) this.posZ;
+        // Check the villager's own position and all 26 neighbours using O(1) HashSet lookups.
+        // Avoids allocating an ArrayList of 27 BlockPos per call (was called multiple times per tick).
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    if (this.homeGuildHall.insideCoordsSet.contains(new BlockPos(px + dx, py + dy, pz + dz))) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
@@ -982,7 +998,7 @@ public abstract class AbstractVillager extends EntityVillager {
 
     public boolean insideHall() {
         BlockPos currentPosition = new BlockPos((int) this.posX, (int) this.posY, (int) this.posZ);
-        return this.homeGuildHall != null && this.homeGuildHall.insideCoords.contains(currentPosition);
+        return this.homeGuildHall != null && this.homeGuildHall.insideCoordsSet.contains(currentPosition);
     }
 
     @Override

@@ -11,4 +11,9 @@ entity.helpfulvillagers.archer.name=Archer
 entity.helpfulvillagers.merchant.name=Merchant
 entity.helpfulvillagers.fisherman.name=Fisherman
 entity.helpfulvillagers.rancher.name=Rancher
+entity.helpfulvillagers.builder.name=Builder
 entity.helpfulvillagers.fish_hook.name=Fish Hook
+
+# Blocks
+tile.construction_fence.name=Construction Fence
+tile.active_construction_fence.name=Active Construction Fence

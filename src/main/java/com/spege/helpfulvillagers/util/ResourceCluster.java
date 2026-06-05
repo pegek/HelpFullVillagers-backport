@@ -1,6 +1,9 @@
 package com.spege.helpfulvillagers.util;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.HashSet;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -11,7 +14,14 @@ import net.minecraft.world.World;
 
 /**
  * A connected run of identical blocks (a tree, an ore vein, a crop patch) discovered by flood-fill.
- * 1.12.2 migration: ChunkCoordinates -> BlockPos; block identity compared via {@link Block#getIdFromBlock}.
+ * 1.12.2 migration: ChunkCoordinates -> BlockPos; block identity compared via ==.
+ *
+ * <p>Optimisation vs 1.7.10 port:
+ * <ul>
+ *   <li>buildCluster now iterative BFS with HashSet visited — O(n) instead of O(n²) ArrayList.contains.</li>
+ *   <li>Eliminates StackOverflow risk for large clusters (no more deep recursion).</li>
+ *   <li>matchesCluster uses a temporary HashSet — O(n) instead of O(n²).</li>
+ * </ul>
  */
 @SuppressWarnings({ "null", "deprecation" })
 public class ResourceCluster {
@@ -35,6 +45,7 @@ public class ResourceCluster {
         this.builtFlag = false;
     }
 
+    /** Returns blocks in the 3×3×3 cube centred on this cluster's starting coords. */
     public ArrayList<Block> getAdjacent() {
         ArrayList<Block> blocks = new ArrayList<Block>();
         for (int x = -1; x <= 1; ++x) {
@@ -50,68 +61,64 @@ public class ResourceCluster {
         return blocks;
     }
 
-    private ArrayList<BlockPos> getAdjacentCoords(BlockPos coords) {
-        ArrayList<BlockPos> adjacent = new ArrayList<BlockPos>();
-        for (int x = -1; x <= 1; ++x) {
-            for (int y = -1; y <= 1; ++y) {
-                for (int z = -1; z <= 1; ++z) {
-                    adjacent.add(new BlockPos(coords.getX() + x, coords.getY() + y, coords.getZ() + z));
-                }
-            }
-        }
-        return adjacent;
-    }
-
     public void buildCluster() {
         this.buildCluster(0);
     }
 
+    /**
+     * Iterative BFS flood-fill collecting all connected blocks of the same type as {@code startBlock}.
+     * {@code limit} caps the Manhattan distance per-axis from the origin; 0 means unlimited.
+     */
     public void buildCluster(int limit) {
-        if (!this.startBlock.equals(Blocks.AIR)) {
-            this.buildCluster(this.coords, limit);
+        if (this.startBlock == null || this.startBlock.equals(Blocks.AIR)) {
+            return;
         }
-    }
+        HashSet<BlockPos> visited = new HashSet<BlockPos>();
+        Deque<BlockPos> queue = new ArrayDeque<BlockPos>();
+        visited.add(this.coords);
+        queue.add(this.coords);
 
-    private void buildCluster(BlockPos coords, int limit) {
-        if (limit > 0) {
-            if (AIHelper.findDistance(coords.getX(), this.coords.getX()) > limit) {
-                return;
+        while (!queue.isEmpty()) {
+            BlockPos current = queue.poll();
+
+            if (limit > 0) {
+                if (AIHelper.findDistance(current.getX(), this.coords.getX()) > limit) continue;
+                if (AIHelper.findDistance(current.getY(), this.coords.getY()) > limit) continue;
+                if (AIHelper.findDistance(current.getZ(), this.coords.getZ()) > limit) continue;
             }
-            if (AIHelper.findDistance(coords.getY(), this.coords.getY()) > limit) {
-                return;
+
+            Block currentBlock = this.world.getBlockState(current).getBlock();
+            if (currentBlock != this.startBlock) continue;
+
+            if (current.getY() < this.lowestCoords.getY()) {
+                this.lowestCoords = current;
             }
-            if (AIHelper.findDistance(coords.getY(), this.coords.getY()) > limit) {
-                return;
-            }
-        }
-        Block currentBlock = this.world.getBlockState(coords).getBlock();
-        if (!this.blockCluster.contains(coords)
-                && Block.getIdFromBlock(currentBlock) == Block.getIdFromBlock(this.startBlock)) {
-            if (coords.getY() < this.lowestCoords.getY()) {
-                this.lowestCoords = coords;
-            }
-            this.blockCluster.add(coords);
-            ArrayList<BlockPos> adjacent = this.getAdjacentCoords(coords);
-            for (int i = 0; i < adjacent.size(); ++i) {
-                if (adjacent.get(i).equals(coords)) {
-                    continue;
+            this.blockCluster.add(current);
+
+            // 26-connectivity: all face/edge/corner neighbours (preserves original behaviour for ore veins)
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        if (dx == 0 && dy == 0 && dz == 0) continue;
+                        BlockPos neighbour = new BlockPos(
+                                current.getX() + dx, current.getY() + dy, current.getZ() + dz);
+                        if (visited.add(neighbour)) {
+                            queue.add(neighbour);
+                        }
+                    }
                 }
-                this.buildCluster(adjacent.get(i), limit);
             }
         }
     }
 
+    /** O(n) match using a temporary HashSet instead of O(n²) ArrayList.contains chain. */
     public boolean matchesCluster(ResourceCluster cluster) {
-        ArrayList<BlockPos> otherCluster = cluster.blockCluster;
-        if (this.blockCluster.size() != otherCluster.size()) {
+        if (this.blockCluster.size() != cluster.blockCluster.size()) {
             return false;
         }
-        for (int i = 0; i < otherCluster.size(); ++i) {
-            BlockPos otherCoords = otherCluster.get(i);
-            if (this.blockCluster.contains(otherCoords)) {
-                continue;
-            }
-            return false;
+        HashSet<BlockPos> mySet = new HashSet<BlockPos>(this.blockCluster);
+        for (BlockPos pos : cluster.blockCluster) {
+            if (!mySet.contains(pos)) return false;
         }
         return true;
     }

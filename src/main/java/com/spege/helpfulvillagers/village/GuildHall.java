@@ -1,6 +1,7 @@
 package com.spege.helpfulvillagers.village;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import net.minecraft.block.Block;
@@ -16,6 +17,7 @@ import net.minecraft.item.ItemFishingRod;
 import net.minecraft.item.ItemHoe;
 import net.minecraft.item.ItemLead;
 import net.minecraft.item.ItemPickaxe;
+import net.minecraft.item.ItemSpade;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.tileentity.TileEntityChest;
@@ -40,6 +42,8 @@ public class GuildHall {
     public BlockPos doorCoords;
     public BlockPos entranceCoords;
     public ArrayList<BlockPos> insideCoords = new ArrayList<BlockPos>();
+    /** Companion HashSet for O(1) contains() lookups — always kept in sync with insideCoords. */
+    public HashSet<BlockPos> insideCoordsSet = new HashSet<BlockPos>();
     public int typeNum;
     public ArrayList<TileEntityChest> guildChests = new ArrayList<TileEntityChest>();
     public ArrayList<TileEntityFurnace> guildFurnaces = new ArrayList<TileEntityFurnace>();
@@ -81,6 +85,7 @@ public class GuildHall {
                 this.findEntranceCoords();
             } catch (StackOverflowError e) {
                 this.insideCoords.clear();
+                this.insideCoordsSet.clear();
             }
             break;
         }
@@ -108,6 +113,8 @@ public class GuildHall {
                 return itemStack.getItem() instanceof ItemFishingRod;
             case 8:
                 return itemStack.getItem() instanceof ItemLead;
+            case 9:
+                return itemStack.getItem() instanceof ItemSpade;
         }
         return false;
     }
@@ -163,32 +170,32 @@ public class GuildHall {
     }
 
     private void fillInsideCoords() {
-        this.insideCoords.add(this.doorCoords);
+        this.addInsideCoord(this.doorCoords);
         int dx = this.doorCoords.getX();
         int dy = this.doorCoords.getY();
         int dz = this.doorCoords.getZ();
         switch (this.itemFrame.getRotation()) {
             case 0: {
                 BlockPos startCoords = new BlockPos(dx, dy, dz - 1);
-                this.insideCoords.add(new BlockPos(dx, dy, dz + 1));
+                this.addInsideCoord(new BlockPos(dx, dy, dz + 1));
                 this.checkZDirection(startCoords, -1);
                 break;
             }
             case 1: {
                 BlockPos startCoords = new BlockPos(dx + 1, dy, dz);
-                this.insideCoords.add(new BlockPos(dx - 1, dy, dz));
+                this.addInsideCoord(new BlockPos(dx - 1, dy, dz));
                 this.checkXDirection(startCoords, 1);
                 break;
             }
             case 2: {
                 BlockPos startCoords = new BlockPos(dx, dy, dz + 1);
-                this.insideCoords.add(new BlockPos(dx, dy, dz - 1));
+                this.addInsideCoord(new BlockPos(dx, dy, dz - 1));
                 this.checkZDirection(startCoords, 1);
                 break;
             }
             case 3: {
                 BlockPos startCoords = new BlockPos(dx - 1, dy, dz);
-                this.insideCoords.add(new BlockPos(dx + 1, dy, dz));
+                this.addInsideCoord(new BlockPos(dx + 1, dy, dz));
                 this.checkXDirection(startCoords, -1);
                 break;
             }
@@ -201,6 +208,12 @@ public class GuildHall {
      * continueFlag = (not a solid wall on {@code side} AND not glass-like) OR workbench OR furnace.
      * Mirrors the original per-direction expansion condition.
      */
+    /** Adds pos to insideCoords and the companion HashSet in one call. */
+    private void addInsideCoord(BlockPos pos) {
+        this.insideCoords.add(pos);
+        this.insideCoordsSet.add(pos);
+    }
+
     private boolean canContinue(BlockPos pos, EnumFacing side) {
         Block b = this.blockAt(pos);
         boolean glassLike = b == Blocks.GLASS || b == Blocks.GLASS_PANE
@@ -211,10 +224,10 @@ public class GuildHall {
 
     private void checkXDirection(BlockPos currentCoords, int direction) {
         boolean continueFlag = false;
-        if (!this.insideCoords.contains(currentCoords) && this.isInside(currentCoords)) {
+        if (!this.insideCoordsSet.contains(currentCoords) && this.isInside(currentCoords)) {
             continueFlag = this.canContinue(currentCoords, direction < 0 ? EnumFacing.WEST : EnumFacing.EAST);
         }
-        this.insideCoords.add(currentCoords);
+        this.addInsideCoord(currentCoords);
         if (continueFlag) {
             int x = currentCoords.getX();
             int y = currentCoords.getY();
@@ -229,10 +242,10 @@ public class GuildHall {
 
     private void checkYDirection(BlockPos currentCoords, int direction) {
         boolean continueFlag = false;
-        if (!this.insideCoords.contains(currentCoords) && this.isInside(currentCoords)) {
+        if (!this.insideCoordsSet.contains(currentCoords) && this.isInside(currentCoords)) {
             continueFlag = this.canContinue(currentCoords, direction < 0 ? EnumFacing.UP : EnumFacing.DOWN);
         }
-        this.insideCoords.add(currentCoords);
+        this.addInsideCoord(currentCoords);
         if (continueFlag) {
             int x = currentCoords.getX();
             int y = currentCoords.getY();
@@ -248,10 +261,10 @@ public class GuildHall {
 
     private void checkZDirection(BlockPos currentCoords, int direction) {
         boolean continueFlag = false;
-        if (!this.insideCoords.contains(currentCoords) && this.isInside(currentCoords)) {
+        if (!this.insideCoordsSet.contains(currentCoords) && this.isInside(currentCoords)) {
             continueFlag = this.canContinue(currentCoords, direction < 0 ? EnumFacing.SOUTH : EnumFacing.NORTH);
         }
-        this.insideCoords.add(currentCoords);
+        this.addInsideCoord(currentCoords);
         if (continueFlag) {
             int x = currentCoords.getX();
             int y = currentCoords.getY();

@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import com.spege.helpfulvillagers.crafting.VillagerRecipe;
 import com.spege.helpfulvillagers.entity.AbstractVillager;
 import com.spege.helpfulvillagers.entity.EntityArcher;
+import com.spege.helpfulvillagers.entity.EntityBuilder;
 import com.spege.helpfulvillagers.entity.EntityFarmer;
 import com.spege.helpfulvillagers.entity.EntityFishHookCustom;
 import com.spege.helpfulvillagers.entity.EntityFisherman;
@@ -23,6 +24,7 @@ import com.spege.helpfulvillagers.entity.EntitySoldier;
 import com.spege.helpfulvillagers.network.AddRecipePacket;
 import com.spege.helpfulvillagers.network.CraftItemClientPacket;
 import com.spege.helpfulvillagers.network.CraftItemServerPacket;
+import com.spege.helpfulvillagers.network.ConstructionJobPacket;
 import com.spege.helpfulvillagers.network.CraftQueueClientPacket;
 import com.spege.helpfulvillagers.network.CraftQueueServerPacket;
 import com.spege.helpfulvillagers.network.CustomRecipesPacket;
@@ -126,6 +128,8 @@ public class HelpfulVillagers {
     public static int deathMessageOption = 1;
     /** Birth broadcast verbosity: 0 = Off, 1 = On, 2 = Verbose. */
     public static int birthMessageOption = 1;
+    /** Construction broadcast verbosity: 0 = Off, 1 = On, 2 = Verbose. */
+    public static int constructionMessageOption = 1;
     /** When true, Archers fire without consuming arrows. */
     public static boolean infiniteArrows = false;
 
@@ -136,6 +140,7 @@ public class HelpfulVillagers {
         config.load();
         deathMessageOption = config.getInt("deathMessage", "general", 1, 0, 2, "0 - Off, 1 - On, 2 - Verbose");
         birthMessageOption = config.getInt("birthMessage", "general", 1, 0, 2, "0 - Off, 1 - On, 2 - Verbose");
+        constructionMessageOption = config.getInt("constructionMessage", "general", 1, 0, 2, "0 - Off, 1 - On, 2 - Verbose");
         infiniteArrows = config.getBoolean("infiniteArrows", "archer", false,
                 "Set to true to allow Archers to shoot without using arrows");
         config.save();
@@ -190,6 +195,7 @@ public class HelpfulVillagers {
         network.registerMessage(PlayerAccountClientPacket.Handler.class, PlayerAccountClientPacket.class, 24, Side.CLIENT);
         network.registerMessage(PlayerAccountServerPacket.Handler.class, PlayerAccountServerPacket.class, 25, Side.SERVER);
         network.registerMessage(FishHookPacket.Handler.class, FishHookPacket.class, 26, Side.CLIENT);
+        network.registerMessage(ConstructionJobPacket.Handler.class, ConstructionJobPacket.class, 27, Side.SERVER);
     }
 
     private void registerEntities() {
@@ -202,6 +208,7 @@ public class HelpfulVillagers {
         this.registerEntity(EntityMerchant.class, "merchant", 6);
         this.registerEntity(EntityFisherman.class, "fisherman", 7);
         this.registerEntity(EntityRancher.class, "rancher", 8);
+        this.registerEntity(EntityBuilder.class, "builder", 9);
         this.registerEntity(EntityFishHookCustom.class, "fish_hook", 100);
     }
 

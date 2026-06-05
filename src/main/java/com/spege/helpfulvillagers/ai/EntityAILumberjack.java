@@ -19,6 +19,9 @@ public class EntityAILumberjack extends EntityAIWorker {
     private EntityLumberjack lumberjack;
     private int searchLimit;
 
+    /** Ticks to wait before calling getNewResource() again after a failed scan. */
+    private int resourceScanCooldown = 0;
+
     public EntityAILumberjack(EntityLumberjack lumberjack) {
         super(lumberjack);
         this.lumberjack = lumberjack;
@@ -63,12 +66,21 @@ public class EntityAILumberjack extends EntityAIWorker {
         if (this.lumberjack.searchBox != null
                 && this.lumberjack.world.isMaterialInBB(this.lumberjack.searchBox, Material.WOOD)
                 && !AIHelper.isInRangeOfAnyVillage(this.lumberjack.posX, this.lumberjack.posY, this.lumberjack.posZ)) {
-            this.lumberjack.currentResource = this.getNewResource();
-            if (this.lumberjack.currentResource != null) {
-                this.searchLimit = 20;
-                this.lumberjack.foundTree = true;
-                this.lumberjack.getNavigator().clearPath();
+            if (this.resourceScanCooldown <= 0) {
+                this.lumberjack.currentResource = this.getNewResource();
+                if (this.lumberjack.currentResource != null) {
+                    this.searchLimit = 20;
+                    this.lumberjack.foundTree = true;
+                    this.lumberjack.getNavigator().clearPath();
+                } else {
+                    // No valid cluster found this tick — wait before scanning again.
+                    this.resourceScanCooldown = 10;
+                }
+            } else {
+                this.resourceScanCooldown--;
             }
+        } else {
+            this.resourceScanCooldown = 0;
         }
         // Defensive null guard (1.7.10 dereferenced target unconditionally here and could NPE).
         if (this.target != null && Math.abs(this.lumberjack.posX - (double) this.target.getX()) <= 5.0

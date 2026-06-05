@@ -59,6 +59,7 @@ public class HelpfulVillage {
     public AxisAlignedBB villageBounds;
     public AxisAlignedBB actualBounds;
     public ArrayList<BlockPos> villageDoors = new ArrayList<BlockPos>();
+    public ArrayList<com.spege.helpfulvillagers.util.ConstructionSite> constructionSites = new ArrayList<com.spege.helpfulvillagers.util.ConstructionSite>();
     public int minX;
     public int minY;
     public int minZ;

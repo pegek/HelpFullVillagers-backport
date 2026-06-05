@@ -29,8 +29,11 @@ import net.minecraft.world.World;
  */
 @SuppressWarnings({ "null", "deprecation" })
 public class AIHelper {
+    /** Shared RNG — avoids allocating a new Random() on every per-tick call. */
+    private static final Random SHARED_RNG = new Random();
+
     public static BlockPos getRandOutsideCoords(AbstractVillager villager, int limit) {
-        Random gen = new Random();
+        Random gen = SHARED_RNG;
         HelpfulVillage village = villager.homeVillage;
         if (villager.lastResource != null) {
             BlockPos center = villager.lastResource.coords;
@@ -68,7 +71,7 @@ public class AIHelper {
     }
 
     public static BlockPos getRandInsideCoords(AbstractVillager villager) {
-        Random gen = new Random();
+        Random gen = SHARED_RNG;
         HelpfulVillage village = villager.homeVillage;
         if (village != null) {
             BlockPos center = village.getActualCenter();
@@ -92,7 +95,9 @@ public class AIHelper {
     public static int chestContains(TileEntityChest chest, ItemStack item) {
         for (int i = 0; i < chest.getSizeInventory(); ++i) {
             ItemStack chestItem = chest.getStackInSlot(i);
-            if (chestItem.isEmpty() || !chestItem.getDisplayName().equals(item.getDisplayName())) {
+            if (chestItem.isEmpty()
+                    || !chestItem.getItem().equals(item.getItem())
+                    || chestItem.getMetadata() != item.getMetadata()) {
                 continue;
             }
             return i;

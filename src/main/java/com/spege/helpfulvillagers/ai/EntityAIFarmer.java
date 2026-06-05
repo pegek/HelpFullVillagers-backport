@@ -41,6 +41,9 @@ public class EntityAIFarmer extends EntityAIWorker {
     private EntityFarmer farmer;
     private ArrayList<BlockPos> farmCoords = new ArrayList<BlockPos>();
 
+    /** Ticks to wait before calling getNewResource() again after a failed scan. */
+    private int resourceScanCooldown = 0;
+
     public EntityAIFarmer(EntityFarmer farmer) {
         super(farmer);
         this.farmer = farmer;
@@ -83,11 +86,19 @@ public class EntityAIFarmer extends EntityAIWorker {
         }
         this.farmer.updateBoxes();
         if (this.farmer.searchBox != null && this.farmer.world.isMaterialInBB(this.farmer.searchBox, Material.GROUND)) {
-            this.farmer.currentResource = this.getNewResource();
-            if (this.farmer.currentResource != null) {
-                this.farmCoords.addAll(this.farmer.currentResource.blockCluster);
-                this.farmer.getNavigator().clearPath();
+            if (this.resourceScanCooldown <= 0) {
+                this.farmer.currentResource = this.getNewResource();
+                if (this.farmer.currentResource != null) {
+                    this.farmCoords.addAll(this.farmer.currentResource.blockCluster);
+                    this.farmer.getNavigator().clearPath();
+                } else {
+                    this.resourceScanCooldown = 10;
+                }
+            } else {
+                this.resourceScanCooldown--;
             }
+        } else {
+            this.resourceScanCooldown = 0;
         }
         // Defensive null guard (1.7.10 dereferenced target unconditionally here and could NPE).
         if (this.target != null && Math.abs(this.farmer.posX - (double) this.target.getX()) <= 5.0

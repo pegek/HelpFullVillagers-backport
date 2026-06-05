@@ -30,7 +30,7 @@ public class GuiVillagerDialog extends GuiScreen {
         this.player = player;
         this.villager = villager;
         this.xSizeOfTexture = 120;
-        this.ySizeOfTexture = villager.profession != 0 ? 130 : 105;
+        this.ySizeOfTexture = 130;
     }
 
     @Override
@@ -49,22 +49,37 @@ public class GuiVillagerDialog extends GuiScreen {
         this.buttonList.clear();
         int posX = (this.width - this.xSizeOfTexture) / 2;
         int posY = (this.height - this.ySizeOfTexture) / 2;
+        int currentY = posY + 5;
+
+        if (this.villager.profession == 0) {
+            this.buttonList.add(new GuiButton(9, posX + 10, currentY, 100, 20, "Trade"));
+            currentY += 25;
+        }
 
         if (this.villager.leader == null) {
-            this.buttonList.add(new GuiButton(0, posX + 10, posY + 5, 100, 20, "Follow Me"));
+            this.buttonList.add(new GuiButton(0, posX + 10, currentY, 100, 20, "Follow Me"));
         } else {
-            this.buttonList.add(new GuiButton(1, posX + 10, posY + 5, 100, 20, "Stop Following"));
+            this.buttonList.add(new GuiButton(1, posX + 10, currentY, 100, 20, "Stop Following"));
         }
-        this.buttonList.add(new GuiButton(2, posX + 10, posY + 30, 100, 20, "Trade"));
-        this.buttonList.add(new GuiButton(3, posX + 10, posY + 55, 100, 20, "Change Profession"));
-        this.buttonList.add(new GuiButton(4, posX + 10, posY + 80, 100, 20, "Give Nickname"));
+        currentY += 25;
+
+        this.buttonList.add(new GuiButton(2, posX + 10, currentY, 100, 20, "Inventory"));
+        currentY += 25;
+
+        this.buttonList.add(new GuiButton(3, posX + 10, currentY, 100, 20, "Change Profession"));
+        currentY += 25;
+
+        this.buttonList.add(new GuiButton(4, posX + 10, currentY, 100, 20, "Give Nickname"));
+        currentY += 25;
 
         if (this.villager.profession == 4 || this.villager.profession == 5) {
-            this.buttonList.add(new GuiButton(5, posX + 10, posY + 105, 100, 20, "Guard Villager"));
+            this.buttonList.add(new GuiButton(5, posX + 10, currentY, 100, 20, "Guard Villager"));
         } else if (this.villager.profession == 6) {
-            this.buttonList.add(new GuiButton(8, posX + 10, posY + 105, 100, 20, "Barter"));
+            this.buttonList.add(new GuiButton(8, posX + 10, currentY, 100, 20, "Barter"));
+        } else if (this.villager.profession == 9) {
+            this.buttonList.add(new GuiButton(10, posX + 10, currentY, 100, 20, "Construction"));
         } else if (this.villager.profession != 0) {
-            this.buttonList.add(new GuiButton(6, posX + 10, posY + 105, 100, 20, "Crafting"));
+            this.buttonList.add(new GuiButton(6, posX + 10, currentY, 100, 20, "Crafting"));
         }
     }
 

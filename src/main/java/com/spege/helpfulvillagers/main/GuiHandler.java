@@ -2,6 +2,7 @@ package com.spege.helpfulvillagers.main;
 
 import com.spege.helpfulvillagers.entity.AbstractVillager;
 import com.spege.helpfulvillagers.gui.GuiBarter;
+import com.spege.helpfulvillagers.gui.GuiConstruction;
 import com.spege.helpfulvillagers.gui.GuiCraftStats;
 import com.spege.helpfulvillagers.gui.GuiCraftingMenu;
 import com.spege.helpfulvillagers.gui.GuiNickname;
@@ -63,6 +64,8 @@ public class GuiHandler implements IGuiHandler {
                     return new GuiTeachRecipe(player, villager);
                 case 7:
                     return new GuiBarter(player, villager);
+                case 8:
+                    return new GuiConstruction(player, villager);
                 default:
                     break;
             }
