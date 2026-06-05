@@ -1,7 +1,6 @@
 package com.spege.helpfulvillagers.network;
 
 import com.spege.helpfulvillagers.entity.AbstractVillager;
-import com.spege.helpfulvillagers.main.HelpfulVillagers;
 import com.spege.helpfulvillagers.village.HelpfulVillage;
 
 import io.netty.buffer.ByteBuf;
@@ -56,11 +55,11 @@ public class VillageSyncPacket implements IMessage {
                                 return;
                             }
                             BlockPos coords = new BlockPos(message.coords[0], message.coords[1], message.coords[2]);
-                            for (HelpfulVillage village : HelpfulVillagers.villages) {
-                                if (!village.initialCenter.equals(entity.homeVillage.initialCenter)) {
-                                    continue;
-                                }
-                                village.initialCenter = coords;
+                            // Client-side homeVillage is a lightweight data container populated by sync
+                            // packets (the authoritative villages live on the server). Create it on demand
+                            // and never touch the shared static villages list from the client thread.
+                            if (entity.homeVillage == null) {
+                                entity.homeVillage = new HelpfulVillage();
                             }
                             entity.homeVillage.initialCenter = coords;
                             entity.villageCenter = coords;

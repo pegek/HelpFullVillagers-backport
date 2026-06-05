@@ -894,6 +894,15 @@ public abstract class AbstractVillager extends EntityVillager {
     }
 
     public void getNewHomeVillage() {
+        // Server-authoritative: villages live in the static HelpfulVillagers.villages list, which is
+        // shared across the integrated client+server threads in single-player. Running this on the
+        // client made a client villager join a server-created village and call
+        // village.world.countEntities() on the WorldServer from the client thread, iterating the
+        // server's live entity list concurrently -> ConcurrentModificationException. The client gets
+        // its homeVillage container from the sync packets (VillageSync/UnlockedHalls/CraftQueue/...).
+        if (this.world.isRemote) {
+            return;
+        }
         if (this.hasDied) {
             return;
         }
