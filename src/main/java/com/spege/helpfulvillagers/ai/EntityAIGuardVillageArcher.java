@@ -55,9 +55,10 @@ public class EntityAIGuardVillageArcher extends EntityAITarget {
         if (this.archer.currentActivity == EnumActivity.RETURN || this.archer.currentActivity == EnumActivity.FOLLOW) {
             return false;
         }
-        // NOTE: getHealth() < getHealth()/2 is always false - preserved verbatim from the 1.7.10
-        // original (likely intended getMaxHealth()); the low-health retreat therefore never fires.
-        if (this.archer.getHealth() < this.archer.getHealth() / 2.0f) {
+        // Fixed: the 1.7.10 original compared getHealth() to getHealth()/2 (always false), so the
+        // low-health retreat never fired. Intended getMaxHealth(). Guards heal 0.5 HP/60t at the hall
+        // (AbstractVillager.updateHealth), so they recover and re-engage — no soft-lock.
+        if (this.archer.getHealth() < this.archer.getMaxHealth() / 2.0f) {
             this.archer.currentActivity = EnumActivity.STORE;
             return true;
         }
@@ -91,7 +92,7 @@ public class EntityAIGuardVillageArcher extends EntityAITarget {
             return false;
         }
         if (this.archer.currentActivity == EnumActivity.STORE) {
-            return this.archer.getHealth() < this.archer.getHealth() / 2.0f || !this.archer.hasTool;
+            return this.archer.getHealth() < this.archer.getMaxHealth() / 2.0f || !this.archer.hasTool;
         }
         return this.villageAgressorTarget != null && this.villageAgressorTarget.isEntityAlive();
     }
@@ -115,7 +116,7 @@ public class EntityAIGuardVillageArcher extends EntityAITarget {
             return;
         }
         this.villageAgressorTarget = this.archer.homeVillage.findNearestVillageAggressor(this.archer);
-        if (this.archer.getHealth() >= this.archer.getHealth() / 2.0f && this.villageAgressorTarget != null) {
+        if (this.archer.getHealth() >= this.archer.getMaxHealth() / 2.0f && this.villageAgressorTarget != null) {
             this.archer.currentActivity = EnumActivity.IDLE;
         }
         int arrowIndex = this.archer.inventory.containsItem(new ItemStack(Items.ARROW));
@@ -134,10 +135,11 @@ public class EntityAIGuardVillageArcher extends EntityAITarget {
                 ArrayList<ItemStack> arrows = new ArrayList<ItemStack>();
                 if (!HelpfulVillagers.infiniteArrows) {
                     for (int i = 0; i < this.archer.inventory.getSizeInventory(); ++i) {
-                        // NOTE: ItemStack.equals is reference equality - preserved verbatim from the
-                        // 1.7.10 original (this arrow-preservation branch therefore never matched).
+                        // Fixed: compare by item, not ItemStack.equals (reference equality in 1.12.2,
+                        // which never matched). This pulls the archer's arrows out before depositing
+                        // loot, then re-adds them below, so arrows are kept instead of deposited.
                         if (this.archer.inventory.getStackInSlot(i).isEmpty()
-                                || !this.archer.inventory.getStackInSlot(i).equals(new ItemStack(Items.ARROW))) {
+                                || !this.archer.inventory.getStackInSlot(i).getItem().equals(Items.ARROW)) {
                             continue;
                         }
                         arrows.add(this.archer.inventory.getStackInSlot(i));
@@ -269,9 +271,10 @@ public class EntityAIGuardVillageArcher extends EntityAITarget {
                             SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.NEUTRAL, 1.0f,
                             1.0f / (this.archer.getRNG().nextFloat() * 0.4f + 0.8f));
                     this.archer.damageItem();
-                    // NOTE: preserved verbatim - the 1.7.10 original only decrements arrows when
-                    // infiniteArrows is on (likely an inverted condition). VERIFY / consider fixing.
-                    if (HelpfulVillagers.infiniteArrows) {
+                    // Fixed: consume an arrow only when infiniteArrows is OFF (the 1.7.10 original had
+                    // the condition inverted, giving free arrows when off and risking decrementSlot(-1)
+                    // when on). The shoot guard above ensures an arrow is present when not infinite.
+                    if (!HelpfulVillagers.infiniteArrows) {
                         this.archer.inventory.decrementSlot(this.archer.inventory.containsItem(new ItemStack(Items.ARROW)));
                     }
                     this.previousTime = -1;

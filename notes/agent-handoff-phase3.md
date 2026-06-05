@@ -86,6 +86,30 @@ Każdy ma komentarz w źródle — szukaj `grep -rn "NOTE:\|preserved verbatim\|
 | `ai/EntityAIFarmer.java:35` | `harvestCrops` | BlockStem→melon/pumpkin przez skan sąsiadów (brak `getStemDirection`) | Zweryfikuj in-game czy rolnik zbiera melony/dynie |
 | `econ/VillageEconomy.java:44` | `initPrices` | One-shot synchroniczny scan bloków — może hitch na dużej wiosce | Monitor in-game; jeśli problem, chunkovizuj |
 
+#### STATUS UPDATE 2026-06-05 — naprawione / odroczone
+
+**✅ NAPRAWIONE** (build zielony, wymaga smoke-testu in-game):
+- **Guard health retreat** (Soldier + Archer, 3 miejsca każdy): `getHealth()/2` → `getMaxHealth()/2`.
+  Root cause potwierdzony: `updateHealth()` leczy 0.5 HP/60t bezwarunkowo → brak soft-locka, strażnik wraca do walki.
+- **Archer arrow decrement** (`attack()`): odwrócony warunek → `if (!infiniteArrows)`. Strzała konsumowana gdy flaga OFF;
+  gdy ON pomijamy (brak ryzyka `decrementSlot(-1)`).
+- **Archer arrow preservation** (`resupply()`): `ItemStack.equals` (reference) → `getItem().equals(Items.ARROW)`.
+  Realizuje intencję: strzały zostają w ekwipunku, depozytuje się resztę.
+- **InventoryVillager.addItem overflow**: `isRemote` → `!isRemote` (drop server-side, zgodnie z `dropFromInventory`).
+- **Miner target** (`findMine()`): **to był bug WPROWADZONY przez port** (niedokończony rename), NIE verbatim.
+  Referencja 1.4.0b5 używa `this.target` konsekwentnie; port zmienił większość na `miner.target` zostawiając
+  `moveTo(this.target=null)` → miner stał w miejscu. Fix: `moveTo(this.miner.target)`. **Wysoki priorytet do smoke-testu —
+  to oznacza, że miner prawdopodobnie nigdy nie kopał w grze.**
+
+**⏸️ ODROCZONE** (świadoma decyzja — nie ruszać bez reprodukcji in-game):
+- **GuildHall flood-fill copy-paste** (checkYDirection +X z `z+1`; checkZDirection +Z woła checkXDirection):
+  dwie asymetrie, ale algorytm był **testowany jako działający**. Nie potwierdzono realnego błędu wykrywania hal;
+  „naprawa" ryzykuje regresję WSZYSTKICH profesji (chesty/furnace/entrance). → Najpierw zbadać in-game czy hale
+  są poprawnie wykrywane; fix tylko przy konkretnej obserwowanej awarii.
+- **getDoorFromCoords / pathfinding przez drzwi**: verify item, brak root cause bez obserwacji.
+- **Farmer stem melon/pumpkin** (`findAdjacentFruit`): logika sensowna (skan 4 sąsiadów), verify in-game czy zbiera.
+- **VillageEconomy initPrices** scan: kwestia wydajności, monitor przy dużych wioskach.
+
 ### 4.3 Kwestie wydajnościowe (następne po bugach)
 
 - `getNewHomeVillage()` — throttle do 40t działa, ale nadal iteruje wszystkie wioski. Przy dużej liczbie wiosek może warto cache + dirty flag.

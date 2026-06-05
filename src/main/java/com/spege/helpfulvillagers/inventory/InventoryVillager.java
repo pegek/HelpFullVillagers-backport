@@ -311,10 +311,11 @@ public class InventoryVillager implements IInventory {
                 return;
             }
         }
-        // NOTE: faithful to the 1.7.10 original, which only drops a leftover stack on the
-        // client side. This looks like an inverted side check (items are silently lost on
-        // the server when the inventory is full), but it is preserved verbatim for now.
-        if (this.owner.world.isRemote) {
+        // Fixed: drop the leftover stack server-side. The 1.7.10 original had an inverted side check
+        // (dropped only on the client), so on the server overflow items were silently lost and on the
+        // client a ghost EntityItem was spawned. Entity spawning must be server-side — matches the
+        // sibling dropFromInventory() guard below.
+        if (!this.owner.world.isRemote) {
             this.dropItem(item);
         }
     }

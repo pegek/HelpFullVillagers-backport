@@ -43,9 +43,10 @@ public class EntityAIGuardVillageSoldier extends EntityAITarget {
         if (this.soldier.currentActivity == EnumActivity.RETURN || this.soldier.currentActivity == EnumActivity.FOLLOW) {
             return false;
         }
-        // NOTE: getHealth() < getHealth()/2 is always false - preserved verbatim from the 1.7.10
-        // original (it likely intended getMaxHealth()); the low-health retreat therefore never fires.
-        if (this.soldier.getHealth() < this.soldier.getHealth() / 2.0f) {
+        // Fixed: the 1.7.10 original compared getHealth() to getHealth()/2 (always false), so the
+        // low-health retreat never fired. Intended getMaxHealth(). Guards heal 0.5 HP/60t at the hall
+        // (AbstractVillager.updateHealth), so they recover and re-engage — no soft-lock.
+        if (this.soldier.getHealth() < this.soldier.getMaxHealth() / 2.0f) {
             this.soldier.currentActivity = EnumActivity.STORE;
             return true;
         }
@@ -79,7 +80,7 @@ public class EntityAIGuardVillageSoldier extends EntityAITarget {
             return false;
         }
         if (this.soldier.currentActivity == EnumActivity.STORE) {
-            return this.soldier.getHealth() < this.soldier.getHealth() / 2.0f || !this.soldier.hasTool;
+            return this.soldier.getHealth() < this.soldier.getMaxHealth() / 2.0f || !this.soldier.hasTool;
         }
         return this.villageAgressorTarget != null && this.villageAgressorTarget.isEntityAlive();
     }
@@ -103,7 +104,7 @@ public class EntityAIGuardVillageSoldier extends EntityAITarget {
             return;
         }
         this.villageAgressorTarget = this.soldier.homeVillage.findNearestVillageAggressor(this.soldier);
-        if (this.soldier.getHealth() >= this.soldier.getHealth() / 2.0f && this.villageAgressorTarget != null) {
+        if (this.soldier.getHealth() >= this.soldier.getMaxHealth() / 2.0f && this.villageAgressorTarget != null) {
             this.soldier.currentActivity = EnumActivity.IDLE;
         }
         if (!this.soldier.inventory.isEmpty() || !this.soldier.hasTool) {

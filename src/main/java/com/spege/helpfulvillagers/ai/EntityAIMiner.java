@@ -27,8 +27,10 @@ import net.minecraftforge.oredict.OreDictionary;
  * via setBlockState(getDefaultState()); dig speed via getDestroySpeed(stack, IBlockState);
  * Block.getIdFromBlock for identity.
  *
- * <p>NOTE (flagged): in {@link #findMine()} the 1.7.10 original assigns {@code miner.target} but then
- * paths to the inherited {@code Worker.target} (a different field) - preserved verbatim.
+ * <p>Fixed: an incomplete field rename during the port left {@link #findMine()} pathing to the
+ * inherited {@code Worker.target} (never assigned here) while operating on {@code miner.target}
+ * everywhere else, so the miner never moved toward its mine. The reference 1.4.0b5 used a single
+ * consistent target; findMine now uses {@code miner.target} throughout.
  */
 @SuppressWarnings({ "null", "deprecation" })
 public class EntityAIMiner extends EntityAIWorker {
@@ -242,7 +244,10 @@ public class EntityAIMiner extends EntityAIWorker {
                     : AIHelper.getRandOutsideCoords(this.miner, 60);
         }
         if (this.miner.target != null) {
-            this.miner.moveTo(this.target, this.speed);
+            // Fixed: was moveTo(this.target) — the AI-base target field, which findMine never assigns
+            // (it operates on this.miner.target throughout). moveTo(null) hit the caught NPE and the
+            // miner never pathed to its mine target. Aligned to this.miner.target.
+            this.miner.moveTo(this.miner.target, this.speed);
         }
         if (!AIHelper.isInRangeOfAnyVillage(this.miner.posX, this.miner.posY, this.miner.posZ)) {
             BlockPos currCoords = new BlockPos((int) this.miner.posX, (int) this.miner.posY - 1, (int) this.miner.posZ);
