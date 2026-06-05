@@ -255,6 +255,45 @@ pojedynczo z zielonym buildem między klasami.** Skutki:
   RenderVillagerCustom + ClientProxy, en_us.lang. **Smoke-test ZDANY** — mod działa w grze. Fix-loop in-game:
   packet-flood throttle, renderery → preInit, NPE merge-loop guard, debug `[HV]` + `filter_log.py`.
   Pozostała faza 2: pełne GUI + pełny fish hook (patrz `notes/agent-handoff-phase2.md`).
+- **2026-06-06** — **GENERAL VILLAGER AI FIXES** (po analizie ogólnego AI: pathing/woda/potwory/drzwi/halls):
+  1. **`moveTo` przestaje porywać home wioski**: usunięto `setHomePosAndDistance(currentPos,20)` z obu wariantów
+     `moveTo`. Wcześniej każdy nieudany daleki path przekotwiczał home villagera na bieżącą pozycję → home
+     podążał za nim, psując tether wioski i cykl powrotu/store. Home zarządzany teraz wyłącznie przez `dayCheck()`.
+     **Najwyższy zysk** — wszystkie ruchy (gather/store/return/move-indoors) idą przez `moveTo`.
+  2. **Szersze unikanie potworów**: 8 nie-bojowych profesji `EntityAIAvoidEntity<EntityZombie>` → `<EntityMob>`
+     (uciekają od szkieletów/creeperów/pająków/etc., nie tylko zombie). Soldier/Archer bez zmian (walczą).
+  3. **Flood-fill GuildHall naprawiony** (był odroczony bug copy-paste): `checkYDirection` (+X z błędnym z+1)
+     i `checkZDirection` (zamienione metody X↔Z → zła ściana w `canContinue`) → symetryczny 6-sąsiedzki wzorzec.
+     Poprawia `insideCoords/doorCoords/entranceCoords` → pathing do hal/skrzyń/drzwi. **Wymaga weryfikacji in-game.**
+- **2026-06-05** — **IN-GAME FIXES #2 (crash + Trade feature)**:
+  1. **ConcurrentModificationException** (crash, client). `getNewHomeVillage()` biegał po obu stronach;
+     `HelpfulVillagers.villages` to statyczna lista współdzielona przez wątki client+server (integrated SP),
+     więc kliencki villager wołał `WorldServer.countEntities()` cross-thread → CME. Fix: guard `getNewHomeVillage`
+     server-side (reszta metod village w onUpdate już była strzeżona); VillageSyncPacket nie iteruje już shared listy.
+  2. **Trade (feature usera)** — opcja „Trade" dla regularnego villagera (profesja 0) otwierała puste oferty.
+     Root cause: `AbstractVillager.getRecipes()` było twardo `return null` (mod wyłączył vanilla handel na rzecz
+     barteru). Fix: dla profesji 0 deleguj do `super.getRecipes()`. + `EntityRegularVillager` losuje vanilla
+     profesję przy spawnie (`setProfession(VillagerRegistry.getById(nextInt(5)))`, ids 0-4 bez nitwita) → pełna
+     różnorodność karier (fletcher/cleric/librarian...). getProfession() pozostaje custom 0 (logika moda nietknięta),
+     forge-profesja steruje vanilla handlem. Persystencja przez super NBT (ProfessionName). **Decyzja usera: losowa profesja.**
+- **2026-06-05** — **IN-GAME BUGFIX (po smoke-teście usera, crash report w notes/logs/)**:
+  1. **Miner crash** `OreDictionary.getOreIDs(new ItemStack(AIR))` → „Stack can not be invalid!" (EntityAIMiner:260
+     + EntityMiner:163). Ujawniony przez fix ruchu minera — miner wreszcie się porusza i skanuje air bloki.
+     Fix: guard `blockStack.isEmpty()` w obu miejscach. **Potwierdza, że fix ruchu minera zadziałał.**
+  2. **Zbroja nie renderuje się** na villagerach. Root cause (zweryfikowany w źródłach Forge): 1.12.2 `RenderBiped`
+     dodaje tylko LayerCustomHead/Elytra/HeldItem — **NIE** LayerBipedArmor (w 1.7.10 stary RenderBiped renderował
+     zbroję sam). Narzędzie w ręce działało (LayerHeldItem), zbroja nie. Fix: `addLayer(new LayerBipedArmor(this))`
+     w RenderVillagerCustom. Ścieżka danych (sloty 28-31 → updateArmor server-side → tracker) była OK.
+  3. Przy okazji: **Builder renderował się rozbieżnie** (osobny RenderBuilder z ModelVillager zamiast ModelBiped).
+     Referencja używa jednego RenderVillagerCustom dla wszystkich (case 9 → builder.png). Usunięto RenderBuilder,
+     Builder renderuje się teraz jak reszta (biped + zbroja + builder.png).
+- **2026-06-05** — **BUGFIX (faza 3 §4.2)**. Naprawione 6 bugów: guard health retreat (Soldier+Archer,
+  `getHealth()/2`→`getMaxHealth()/2`, potwierdzony brak soft-locka bo updateHealth leczy 0.5HP/60t),
+  archer arrow decrement (odwrócony `infiniteArrows`), archer arrow preservation (reference equality→getItem),
+  InventoryVillager overflow (drop server-side), **miner target** (`moveTo(this.target=null)`→`miner.target` —
+  to był bug WPROWADZONY przez port, nie verbatim; miner prawdopodobnie nigdy nie kopał). Odroczone (nie ruszać
+  bez reprodukcji): GuildHall flood-fill asymetrie (tested-working, ryzyko regresji), door pathfinding, farmer stem,
+  economy scan. Build zielony. Szczegóły: `agent-handoff-phase3.md §4.2 STATUS UPDATE`.
 - **2026-06-05** — **AI OPTIMIZATION** (po analizie fazy 3). Zidentyfikowane i naprawione 7 problemów wydajnościowych:
   1. `ResourceCluster.buildCluster` — **iteracyjny BFS + HashSet visited** (O(n) zamiast O(n²), brak ryzyka StackOverflow).
      Naprawiono też copy-paste bug Y/Y zamiast Y/Z w sprawdzeniu limitu osi oraz O(n²) w `matchesCluster` → HashSet.

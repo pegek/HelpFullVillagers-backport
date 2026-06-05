@@ -102,10 +102,9 @@ Każdy ma komentarz w źródle — szukaj `grep -rn "NOTE:\|preserved verbatim\|
   to oznacza, że miner prawdopodobnie nigdy nie kopał w grze.**
 
 **⏸️ ODROCZONE** (świadoma decyzja — nie ruszać bez reprodukcji in-game):
-- **GuildHall flood-fill copy-paste** (checkYDirection +X z `z+1`; checkZDirection +Z woła checkXDirection):
-  dwie asymetrie, ale algorytm był **testowany jako działający**. Nie potwierdzono realnego błędu wykrywania hal;
-  „naprawa" ryzykuje regresję WSZYSTKICH profesji (chesty/furnace/entrance). → Najpierw zbadać in-game czy hale
-  są poprawnie wykrywane; fix tylko przy konkretnej obserwowanej awarii.
+- ~~**GuildHall flood-fill copy-paste**~~ → **NAPRAWIONE 2026-06-06** (commit `0f33901`): obie asymetrie
+  (checkYDirection +X z `z+1`; checkZDirection zamienione metody X↔Z) poprawione do symetrycznego 6-sąsiedzkiego
+  wzorca. Awansowane z odroczenia, bo user zgłosił problemy z pathingiem do hal/drzwi. Wymaga weryfikacji in-game.
 - **getDoorFromCoords / pathfinding przez drzwi**: verify item, brak root cause bez obserwacji.
 - **Farmer stem melon/pumpkin** (`findAdjacentFruit`): logika sensowna (skan 4 sąsiadów), verify in-game czy zbiera.
 - **VillageEconomy initPrices** scan: kwestia wydajności, monitor przy dużych wioskach.
