@@ -7,7 +7,6 @@ import com.spege.helpfulvillagers.ai.EntityAILumberjack;
 import com.spege.helpfulvillagers.enums.EnumActivity;
 import com.spege.helpfulvillagers.main.HelpfulVillagers;
 import com.spege.helpfulvillagers.network.SaplingPacket;
-import com.spege.helpfulvillagers.util.AIHelper;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLog;
@@ -28,9 +27,8 @@ import net.minecraft.world.World;
 @SuppressWarnings({ "null", "deprecation" })
 public class EntityLumberjack extends AbstractVillager {
     public boolean foundTree;
+    /** Synced to client via SaplingPacket so the client model can show a sapling in hand. */
     public boolean shouldPlant;
-    private int previousTime;
-    private int currentTime;
 
     private final ItemStack[] lumberjackTools = new ItemStack[] {
             new ItemStack(Items.DIAMOND_AXE), new ItemStack(Items.GOLDEN_AXE), new ItemStack(Items.IRON_AXE),
@@ -69,8 +67,6 @@ public class EntityLumberjack extends AbstractVillager {
         this.searchRadius = 10;
         this.foundTree = false;
         this.shouldPlant = false;
-        this.previousTime = 0;
-        this.currentTime = 0;
         this.knownRecipes.addAll(HelpfulVillagers.lumberjackRecipes);
         this.setTools(this.lumberjackTools);
         this.getNewGuildHall();
@@ -98,9 +94,9 @@ public class EntityLumberjack extends AbstractVillager {
         this.pickupSaplings();
         this.shouldPlantSapling();
         this.sync();
-        if (this.shouldPlant) {
-            this.plantSapling();
-        }
+        // Note: sapling planting is now handled inside EntityAILumberjack (Thrall-style stump
+        // replant). shouldPlant is kept and synced so the client can show the sapling-in-hand
+        // visual if desired; the crude onUpdate plantSapling() has been removed.
     }
 
     @Override
@@ -114,39 +110,10 @@ public class EntityLumberjack extends AbstractVillager {
     }
 
     private void shouldPlantSapling() {
+        // Kept to set shouldPlant for client-side visual sync (SaplingPacket).
+        // Actual planting is now done by EntityAILumberjack (stump replant after each tree).
         if (this.homeVillage != null && !this.world.isRemote) {
-            this.shouldPlant = !AIHelper.isInRangeOfAnyVillage(this.posX, this.posY, this.posZ) && !this.nearHall();
-        }
-    }
-
-    private void plantSapling() {
-        int index = this.inventory.containsItem(new ItemStack(Blocks.SAPLING));
-        if (this.previousTime <= 0) {
-            this.previousTime = this.ticksExisted;
-        }
-        this.currentTime = this.ticksExisted;
-        if (this.currentTime - this.previousTime >= 200) {
-            this.previousTime = 0;
-            if (index >= 0) {
-                int y = (int) this.posY;
-                while (true) {
-                    Block air = this.world.getBlockState(new BlockPos((int) this.posX, y, (int) this.posZ)).getBlock();
-                    Block dirt = this.world.getBlockState(new BlockPos((int) this.posX, y - 1, (int) this.posZ)).getBlock();
-                    if (air == Blocks.AIR && (dirt == Blocks.GRASS || dirt == Blocks.DIRT)) {
-                        ItemStack saplingItem = this.inventory.getStackInSlot(index);
-                        int metadata = saplingItem.getMetadata();
-                        Block saplingBlock = Block.getBlockFromItem(saplingItem.getItem());
-                        this.world.setBlockState(new BlockPos((int) this.posX, y, (int) this.posZ),
-                                saplingBlock.getStateFromMeta(metadata), 2);
-                        this.inventory.decrementSlot(index);
-                        return;
-                    }
-                    if (air != Blocks.AIR) {
-                        return;
-                    }
-                    --y;
-                }
-            }
+            this.shouldPlant = this.inventory.containsItem(new ItemStack(Blocks.SAPLING)) >= 0;
         }
     }
 
