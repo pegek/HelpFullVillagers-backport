@@ -415,9 +415,14 @@ public abstract class AbstractVillager extends EntityVillager {
     public void moveTo(BlockPos coords, float speed) {
         try {
             if (!this.getNavigator().tryMoveToXYZ(coords.getX(), coords.getY(), coords.getZ(), speed)) {
+                // Direct path failed — try a reachable point biased toward the target so the villager
+                // can route around obstacles incrementally instead of giving up.
+                // NOTE: the 1.7.10 original also called setHomePosAndDistance(currentPos, 20) here, which
+                // hijacked the village home binding — every failed long-distance path re-anchored the
+                // villager's "home" to wherever it currently stood, so home followed the villager and the
+                // village tether / return-to-hall cycle broke. Home is managed solely by dayCheck() now.
                 Vec3d vector = new Vec3d(coords.getX(), coords.getY(), coords.getZ());
                 Vec3d tempVec = RandomPositionGenerator.findRandomTargetBlockTowards(this, 10, 3, vector);
-                this.setHomePosAndDistance(new BlockPos(this.posX, this.posY, this.posZ), 20);
                 if (tempVec != null) {
                     this.getNavigator().tryMoveToXYZ(tempVec.x, tempVec.y, tempVec.z, speed);
                 }
@@ -430,9 +435,9 @@ public abstract class AbstractVillager extends EntityVillager {
     public void moveTo(Entity entity, float speed) {
         try {
             if (!this.getNavigator().tryMoveToEntityLiving(entity, speed)) {
+                // See moveTo(BlockPos): the home-binding side effect from the 1.7.10 original is removed.
                 Vec3d vector = new Vec3d((int) entity.posX, (int) entity.posY, (int) entity.posZ);
                 Vec3d tempVec = RandomPositionGenerator.findRandomTargetBlockTowards(this, 10, 3, vector);
-                this.setHomePosAndDistance(new BlockPos(this.posX, this.posY, this.posZ), 20);
                 if (tempVec != null) {
                     this.getNavigator().tryMoveToXYZ(tempVec.x, tempVec.y, tempVec.z, speed);
                 }
