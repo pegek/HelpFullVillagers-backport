@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.spege.helpfulvillagers.ai.EntityAIExitWater;
 import com.spege.helpfulvillagers.ai.EntityAIFollowLeader;
 import com.spege.helpfulvillagers.ai.EntityAIMoveIndoorsCustom;
 import com.spege.helpfulvillagers.ai.EntityAIVillagerMateCustom;
@@ -205,6 +206,8 @@ public abstract class AbstractVillager extends EntityVillager {
         this.tasks.addTask(1, new EntityAIFollowLeader(this));
         this.tasks.addTask(2, new EntityAIMoveIndoorsCustom(this));
         this.tasks.addTask(0, new EntityAISwimming(this));
+        // Actively walk back to dry land when submerged (swimming alone only keeps them afloat).
+        this.tasks.addTask(0, new EntityAIExitWater(this));
         this.tasks.addTask(1, new EntityAITradePlayer(this));
         this.tasks.addTask(1, new EntityAILookAtTradePlayer(this));
         this.tasks.addTask(2, new EntityAIVillagerMateCustom(this));
