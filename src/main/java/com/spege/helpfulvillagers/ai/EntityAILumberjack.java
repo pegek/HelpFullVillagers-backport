@@ -10,6 +10,7 @@ import com.spege.helpfulvillagers.main.HelpfulVillagers;
 import com.spege.helpfulvillagers.util.AIHelper;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockLeaves;
 import net.minecraft.block.BlockLog;
 import net.minecraft.block.BlockNewLog;
 import net.minecraft.block.BlockOldLog;
@@ -66,6 +67,10 @@ public class EntityAILumberjack extends EntityAIWorker {
     private static final int MIN_MINING_TICKS = 5;
     /** Abandon the current tree after this many consecutive blocks that survive setBlockToAir. */
     private static final int MAX_STUCK_BLOCKS = 3;
+    /** Extra blocks beyond the village's actual bounds that are still treated as "village" (off-limits). */
+    private static final int VILLAGE_MARGIN = 10;
+    /** Half-extent of the box scanned around a log for leaves (natural-tree detection). */
+    private static final int LEAF_SCAN = 2;
 
     // ---- State machine -----------------------------------------------------------
     private enum WoodState { SEARCHING, NAVIGATING, CHOPPING }
@@ -166,8 +171,10 @@ public class EntityAILumberjack extends EntityAIWorker {
                     mpos.setPos(x, y, z);
                     if (!world.isBlockLoaded(mpos)) continue;
                     if (!isLog(world.getBlockState(mpos))) continue;
-                    // Skip logs inside the village — protect decorative/village trees
-                    if (this.isInsideVillage(x, y, z)) continue;
+                    // Skip logs in/near the village (protects house frames at the village edge).
+                    if (this.isNearVillage(x, y, z)) continue;
+                    // Only fell natural trees: a real tree has leaves nearby; house log pillars don't.
+                    if (!this.hasLeavesNear(mpos)) continue;
                     double distSq = origin.distanceSq(mpos);
                     if (distSq < bestDistSq) {
                         bestDistSq = distSq;
@@ -179,10 +186,37 @@ public class EntityAILumberjack extends EntityAIWorker {
         return best;
     }
 
-    private boolean isInsideVillage(int x, int y, int z) {
+    /** True if (x,y,z) is inside the village's actual bounds expanded by {@link #VILLAGE_MARGIN}. */
+    private boolean isNearVillage(int x, int y, int z) {
         if (this.lumberjack.homeVillage == null
                 || this.lumberjack.homeVillage.actualBounds == null) return false;
-        return this.lumberjack.homeVillage.isInsideVillage(x, y, z);
+        net.minecraft.util.math.AxisAlignedBB b = this.lumberjack.homeVillage.actualBounds;
+        return x >= b.minX - VILLAGE_MARGIN && x <= b.maxX + VILLAGE_MARGIN
+                && z >= b.minZ - VILLAGE_MARGIN && z <= b.maxZ + VILLAGE_MARGIN;
+    }
+
+    /** Scans a small box around the log for any leaf block — distinguishes trees from buildings. */
+    private boolean hasLeavesNear(BlockPos logPos) {
+        World world = this.lumberjack.world;
+        BlockPos.MutableBlockPos p = new BlockPos.MutableBlockPos();
+        for (int dx = -LEAF_SCAN; dx <= LEAF_SCAN; dx++) {
+            for (int dy = -1; dy <= LEAF_SCAN + 2; dy++) { // bias upward — leaves sit above the trunk
+                for (int dz = -LEAF_SCAN; dz <= LEAF_SCAN; dz++) {
+                    p.setPos(logPos.getX() + dx, logPos.getY() + dy, logPos.getZ() + dz);
+                    if (!world.isBlockLoaded(p)) continue;
+                    if (isLeaves(world.getBlockState(p))) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean isLeaves(@Nullable IBlockState bs) {
+        if (bs == null) return false;
+        Block b = bs.getBlock();
+        if (b instanceof BlockLeaves) return true;
+        ResourceLocation rn = b.getRegistryName();
+        return rn != null && rn.getResourcePath().contains("leaves");
     }
 
     // ---- NAVIGATING --------------------------------------------------------------
