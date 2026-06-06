@@ -255,6 +255,17 @@ pojedynczo z zielonym buildem między klasami.** Skutki:
   RenderVillagerCustom + ClientProxy, en_us.lang. **Smoke-test ZDANY** — mod działa w grze. Fix-loop in-game:
   packet-flood throttle, renderery → preInit, NPE merge-loop guard, debug `[HV]` + `filter_log.py`.
   Pozostała faza 2: pełne GUI + pełny fish hook (patrz `notes/agent-handoff-phase2.md`).
+- **2026-06-06** — **IN-GAME AI FIXES #2 (po logach usera, `notes/logs/latest.log`)**:
+  1. **construction_fence recipe** — `minecraft:oak_fence` nie istnieje w 1.12.2 (split per-drewno był w 1.13) →
+     `Unknown item` → płot niecraftowalny. Fix: `minecraft:fence`.
+  2. **Lumberjack niszczył domy** — ścinał kłody-słupy domów na obrzeżu wioski (poza `actualBounds`). Fix:
+     (a) wymóg liści w pobliżu (`hasLeavesNear` — drzewa mają liście, konstrukcje nie), (b) margines wioski
+     `actualBounds + 10`. Lumberjack pracuje teraz dalej i nie tyka zabudowy.
+  3. **Wychodzenie z wody** — nowy `EntityAIExitWater` (prio 0, mutex 1): gdy w wodzie, pre-emptuje pracę,
+     szuka najbliższego suchego lądu (8 bloków) i tam idzie. Swimming tylko utrzymywał na powierzchni.
+  - **Miner** (z logów): 61× `getNewResource: 0 candidates` — wykrywa tylko ODSŁONIĘTĄ rudę w skanie 11×11,
+    a wąski szyb nic nie odsłania → kopie w dół bez celu. **Architektoniczna nieefektywność** → potrzebny
+    rewrite strip-mine w stylu `ThrallAIMineshaft` (osobna większa sesja, opcja A z analizy).
 - **2026-06-06** — **GENERAL VILLAGER AI FIXES** (po analizie ogólnego AI: pathing/woda/potwory/drzwi/halls):
   1. **`moveTo` przestaje porywać home wioski**: usunięto `setHomePosAndDistance(currentPos,20)` z obu wariantów
      `moveTo`. Wcześniej każdy nieudany daleki path przekotwiczał home villagera na bieżącą pozycję → home
