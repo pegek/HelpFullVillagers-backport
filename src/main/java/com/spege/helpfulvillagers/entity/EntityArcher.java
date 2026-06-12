@@ -2,10 +2,14 @@ package com.spege.helpfulvillagers.entity;
 
 import java.util.ArrayList;
 
-import com.spege.helpfulvillagers.ai.EntityAIGuardVillageArcher;
+import com.spege.helpfulvillagers.ai.EntityAIGuardBowAttack;
+import com.spege.helpfulvillagers.ai.EntityAIGuardMeleeAttack;
+import com.spege.helpfulvillagers.ai.EntityAIGuardResupply;
+import com.spege.helpfulvillagers.ai.EntityAIVillageGuardTarget;
 import com.spege.helpfulvillagers.enums.EnumActivity;
 import com.spege.helpfulvillagers.main.HelpfulVillagers;
 
+import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemBow;
 import net.minecraft.item.ItemStack;
@@ -17,7 +21,6 @@ import net.minecraft.world.World;
 @SuppressWarnings("null")
 public class EntityArcher extends AbstractVillager {
     private final ItemStack[] archerTools = new ItemStack[] { new ItemStack(Items.BOW) };
-    public final int ARROW_TIME = 20;
 
     public EntityArcher(World world) {
         super(world);
@@ -43,7 +46,12 @@ public class EntityArcher extends AbstractVillager {
         if (this.getNavigator() instanceof PathNavigateGround) {
             ((PathNavigateGround) this.getNavigator()).setBreakDoors(false);
         }
-        this.tasks.addTask(2, new EntityAIGuardVillageArcher(this));
+        // Creepers are the archer's priority target — soldiers only fight them hit-and-run.
+        this.targetTasks.addTask(1, new EntityAIVillageGuardTarget(this, e -> e instanceof EntityCreeper));
+        this.tasks.addTask(2, new EntityAIGuardResupply(this));
+        this.tasks.addTask(3, new EntityAIGuardBowAttack(this));
+        // Melee fallback: runs only when the bow task cannot (no bow / out of arrows).
+        this.tasks.addTask(4, new EntityAIGuardMeleeAttack(this));
     }
 
     @Override

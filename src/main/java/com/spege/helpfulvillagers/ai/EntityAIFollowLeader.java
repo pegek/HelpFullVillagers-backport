@@ -29,6 +29,11 @@ import net.minecraft.util.math.MathHelper;
  */
 @SuppressWarnings({ "null", "deprecation" })
 public class EntityAIFollowLeader extends EntityAIBase {
+    // NOTE: follow-mode combat below still uses the legacy instant-shot mechanics. The village
+    // guard duty moved to EntityAIGuardBowAttack/EntityAIGuardMeleeAttack (draw animation,
+    // cooldowns, enchantments); porting follow-mode onto those is a flagged future improvement.
+    private static final int ARROW_TIME = 20;
+
     private AbstractVillager villager;
     private EntityLivingBase leader;
     private EntityLivingBase threatTarget;
@@ -127,7 +132,7 @@ public class EntityAIFollowLeader extends EntityAIBase {
                 archer.getLookHelper().setLookPositionWithEntity(this.threatTarget, 30.0f, 30.0f);
                 if (this.previousTime < 0) {
                     this.previousTime = archer.ticksExisted;
-                } else if (this.currentTime - this.previousTime >= archer.ARROW_TIME) {
+                } else if (this.currentTime - this.previousTime >= ARROW_TIME) {
                     if (!archer.world.isRemote) {
                         EntityTippedArrow arrow = new EntityTippedArrow(archer.world, archer);
                         double d0 = this.threatTarget.posX - archer.posX;
