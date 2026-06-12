@@ -36,12 +36,17 @@ public class EntityAIGuardResupply extends EntityAIBase {
     /** Chest work / re-path runs at most every this many ticks while the task is active. */
     private static final int WORK_INTERVAL = 20;
 
+    /** Occupied main-inventory slots (kept items excluded) that justify a deposit trip. */
+    private static final int DEPOSIT_SLOT_THRESHOLD = 6;
+
     private final AbstractVillager villager;
     private final float speed;
     private long armorRetryAt;
     private long ammoRetryAt;
     private long offhandRetryAt;
     private int workCooldown;
+    /** Cleared when all guild chests are full, so deposit-only trips end instead of looping. */
+    private boolean depositPossible = true;
 
     public EntityAIGuardResupply(AbstractVillager villager) {
         this.villager = villager;
@@ -68,19 +73,20 @@ public class EntityAIGuardResupply extends EntityAIBase {
         if (this.villager.getAttackTarget() != null) {
             return false;
         }
-        return this.hasEquipmentNeeds() || !this.villager.inventory.isEmpty();
+        return this.hasEquipmentNeeds() || this.shouldDeposit();
     }
 
     @Override
     public void startExecuting() {
         this.villager.currentActivity = EnumActivity.STORE;
         this.workCooldown = 0;
+        this.depositPossible = true;
         HelpfulVillagers.logger.info(
                 "[HV] Resupply: {} id={} starts (health={} tool={} armored={} ammoNeed={} offhandNeed={} loot={})",
                 this.villager.getClass().getSimpleName(), this.villager.getEntityId(),
                 this.needsHealing() ? "LOW" : "ok", this.villager.hasTool, this.villager.isFullyArmored(),
                 this.villager.needsCombatAmmo(), this.villager.needsOffhandEquipment(),
-                !this.villager.inventory.isEmpty());
+                this.shouldDeposit());
     }
 
     @Override
@@ -92,7 +98,7 @@ public class EntityAIGuardResupply extends EntityAIBase {
         if (this.villager.homeGuildHall == null) {
             return false;
         }
-        return this.needsHealing() || this.hasEquipmentNeeds() || !this.villager.inventory.isEmpty();
+        return this.needsHealing() || this.hasEquipmentNeeds() || this.shouldDeposit() && this.depositPossible;
     }
 
     @Override
@@ -115,21 +121,35 @@ public class EntityAIGuardResupply extends EntityAIBase {
             this.villager.currentActivity = EnumActivity.RETURN;
             return;
         }
-        TileEntityChest chest = this.villager.homeGuildHall.getAvailableChest();
-        if (chest == null) {
-            HelpfulVillagers.logger.info("[HV] Resupply: {} id={} no available chest in hall, will switch halls",
+        // Gateway is the EXISTENCE of guild chests, not a free slot: equipping armor/tools/ammo
+        // works fine from completely full chests. (The old getAvailableChest() gateway made a
+        // well-stocked, full chest lock the guard out of all resupply — observed in-game as an
+        // endless "no available chest, will switch halls" loop on unarmed archers.)
+        this.villager.homeGuildHall.checkChests();
+        if (this.villager.homeGuildHall.guildChests.isEmpty()) {
+            HelpfulVillagers.logger.info("[HV] Resupply: {} id={} hall has no chests, will switch halls",
                     this.villager.getClass().getSimpleName(), this.villager.getEntityId());
             this.villager.changeGuildHall = true;
             return;
         }
         this.villager.changeGuildHall = false;
+        TileEntityChest chest = this.nearestGuildChest();
         if (AIHelper.findDistance((int) this.villager.posX, chest.getPos().getX()) > 2
                 || AIHelper.findDistance((int) this.villager.posY, chest.getPos().getY()) > 2
                 || AIHelper.findDistance((int) this.villager.posZ, chest.getPos().getZ()) > 2) {
             this.villager.moveTo(chest.getPos(), this.speed);
             return;
         }
-        this.depositInventory(chest);
+        // Depositing does need free space — skip it (and stop deposit-only trips) when every
+        // chest is full; equipping below still proceeds.
+        TileEntityChest depositChest = this.villager.homeGuildHall.getAvailableChest();
+        if (depositChest != null) {
+            this.depositInventory(depositChest);
+        } else if (this.shouldDeposit()) {
+            this.depositPossible = false;
+            HelpfulVillagers.logger.info("[HV] Resupply: {} id={} all chests full, skipping deposit",
+                    this.villager.getClass().getSimpleName(), this.villager.getEntityId());
+        }
         if (!this.villager.isFullyArmored()) {
             this.equipArmorFromChests();
             if (!this.villager.isFullyArmored()) {
@@ -163,6 +183,38 @@ public class EntityAIGuardResupply extends EntityAIBase {
 
     private boolean needsHealing() {
         return this.villager.getHealth() < this.villager.getMaxHealth() / 2.0f;
+    }
+
+    /**
+     * Deposit trips run when the bag is full or meaningfully loaded — not for every single picked
+     * up item. Per-item trips kept guards in the STORE state (combat suspended) almost
+     * permanently, which read in-game as "guards wander around and don't fight back".
+     */
+    private boolean shouldDeposit() {
+        if (this.villager.inventory.isFull()) {
+            return true;
+        }
+        int occupied = 0;
+        for (int i = 0; i < this.villager.inventory.getSizeInventory(); ++i) {
+            ItemStack stack = this.villager.inventory.getStackInSlot(i);
+            if (!stack.isEmpty() && !this.villager.shouldKeepInInventory(stack)) {
+                ++occupied;
+            }
+        }
+        return occupied >= DEPOSIT_SLOT_THRESHOLD;
+    }
+
+    private TileEntityChest nearestGuildChest() {
+        TileEntityChest nearest = null;
+        double best = Double.MAX_VALUE;
+        for (TileEntityChest chest : this.villager.homeGuildHall.guildChests) {
+            double dist = this.villager.getDistanceSq(chest.getPos());
+            if (dist < best) {
+                best = dist;
+                nearest = chest;
+            }
+        }
+        return nearest;
     }
 
     private boolean hasEquipmentNeeds() {
