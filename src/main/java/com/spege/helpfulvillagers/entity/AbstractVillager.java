@@ -990,6 +990,9 @@ public abstract class AbstractVillager extends EntityVillager {
         }
         int wear = 1 + MathHelper.floor(damage);
         shield.setItemDamage(shield.getItemDamage() + wear);
+        HelpfulVillagers.logger.info("[HV] Shield: {} id={} blocked {} dmg (shield {}/{})",
+                this.getClass().getSimpleName(), this.getEntityId(), damage,
+                shield.getItemDamage(), shield.getMaxDamage());
         if (shield.getItemDamage() >= shield.getMaxDamage()) {
             this.inventory.setInventorySlotContents(InventoryVillager.OFFHAND_SLOT, ItemStack.EMPTY);
             this.resetActiveHand();

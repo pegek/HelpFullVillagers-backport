@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.spege.helpfulvillagers.entity.AbstractVillager;
 import com.spege.helpfulvillagers.enums.EnumActivity;
+import com.spege.helpfulvillagers.main.HelpfulVillagers;
 
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.util.math.BlockPos;
@@ -73,6 +74,8 @@ public class EntityAIPatrolVillage extends EntityAIBase {
         this.waypointTicks = 0;
         this.pauseTicks = 0;
         this.repathDelay = 0;
+        HelpfulVillagers.logger.info("[HV] Patrol: {} id={} starts round with {} waypoints",
+                this.guard.getClass().getSimpleName(), this.guard.getEntityId(), this.route.size());
     }
 
     @Override
@@ -100,6 +103,8 @@ public class EntityAIPatrolVillage extends EntityAIBase {
             return;
         }
         if (++this.waypointTicks > WAYPOINT_TIMEOUT) {
+            HelpfulVillagers.logger.info("[HV] Patrol: {} id={} skips unreachable waypoint {}",
+                    this.guard.getClass().getSimpleName(), this.guard.getEntityId(), waypoint);
             this.advance();
             return;
         }

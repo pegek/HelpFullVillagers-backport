@@ -166,6 +166,9 @@ public class EntityAIGuardBowAttack extends EntityAIBase {
         this.guard.world.playSound(null, this.guard.posX, this.guard.posY, this.guard.posZ,
                 SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.NEUTRAL, 1.0f,
                 1.0f / (this.guard.getRNG().nextFloat() * 0.4f + 0.8f));
+        HelpfulVillagers.logger.info("[HV] BowAttack: {} id={} shot at {} (charge velocity={})",
+                this.guard.getClass().getSimpleName(), this.guard.getEntityId(), target.getName(),
+                String.format("%.2f", velocity));
         this.guard.damageItem();
         if (!HelpfulVillagers.infiniteArrows) {
             int index = this.guard.inventory.containsItem(this.guard.getCombatAmmoItem());

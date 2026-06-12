@@ -5,6 +5,7 @@ import java.util.function.Predicate;
 
 import com.spege.helpfulvillagers.entity.AbstractVillager;
 import com.spege.helpfulvillagers.enums.EnumActivity;
+import com.spege.helpfulvillagers.main.HelpfulVillagers;
 import com.spege.helpfulvillagers.village.HelpfulVillage;
 
 import net.minecraft.entity.EntityLivingBase;
@@ -81,6 +82,9 @@ public class EntityAIVillageGuardTarget extends EntityAITarget {
         this.guard.setAttackTarget(this.candidate);
         this.stuckTicks = 0;
         this.lastDistanceSq = Double.MAX_VALUE;
+        HelpfulVillagers.logger.info("[HV] GuardTarget: {} id={} engages {} dist={}",
+                this.guard.getClass().getSimpleName(), this.guard.getEntityId(),
+                this.candidate.getName(), String.format("%.1f", this.guard.getDistance(this.candidate)));
         super.startExecuting();
     }
 
@@ -99,6 +103,8 @@ public class EntityAIVillageGuardTarget extends EntityAITarget {
         }
         // Leash: stop pursuing once the target is well outside the village.
         if (!village.actualBounds.grow(LEASH_MARGIN).intersects(target.getEntityBoundingBox())) {
+            HelpfulVillagers.logger.info("[HV] GuardTarget: {} id={} leashes off {} (left village area)",
+                    this.guard.getClass().getSimpleName(), this.guard.getEntityId(), target.getName());
             return false;
         }
         // Give up on unseen targets we make no progress toward (unreachable, e.g. behind walls).
@@ -107,6 +113,8 @@ public class EntityAIVillageGuardTarget extends EntityAITarget {
         if (!this.guard.getEntitySenses().canSee(target) && this.guard.getNavigator().noPath()
                 && distanceSq >= this.lastDistanceSq - 1.0) {
             if (++this.stuckTicks > STUCK_GIVE_UP_TICKS) {
+                HelpfulVillagers.logger.info("[HV] GuardTarget: {} id={} gives up on {} (unseen, no path progress)",
+                        this.guard.getClass().getSimpleName(), this.guard.getEntityId(), target.getName());
                 return false;
             }
         } else {

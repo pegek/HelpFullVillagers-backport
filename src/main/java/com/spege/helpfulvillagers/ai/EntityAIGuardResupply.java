@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.spege.helpfulvillagers.crafting.CraftItem;
 import com.spege.helpfulvillagers.entity.AbstractVillager;
 import com.spege.helpfulvillagers.enums.EnumActivity;
+import com.spege.helpfulvillagers.main.HelpfulVillagers;
 import com.spege.helpfulvillagers.util.AIHelper;
 
 import net.minecraft.entity.ai.EntityAIBase;
@@ -74,6 +75,12 @@ public class EntityAIGuardResupply extends EntityAIBase {
     public void startExecuting() {
         this.villager.currentActivity = EnumActivity.STORE;
         this.workCooldown = 0;
+        HelpfulVillagers.logger.info(
+                "[HV] Resupply: {} id={} starts (health={} tool={} armored={} ammoNeed={} offhandNeed={} loot={})",
+                this.villager.getClass().getSimpleName(), this.villager.getEntityId(),
+                this.needsHealing() ? "LOW" : "ok", this.villager.hasTool, this.villager.isFullyArmored(),
+                this.villager.needsCombatAmmo(), this.villager.needsOffhandEquipment(),
+                !this.villager.inventory.isEmpty());
     }
 
     @Override
@@ -103,11 +110,15 @@ public class EntityAIGuardResupply extends EntityAIBase {
         this.workCooldown = WORK_INTERVAL;
         if (!this.villager.nearHall()) {
             // Hand navigation to EntityAIMoveIndoorsCustom; we re-trigger once it arrives.
+            HelpfulVillagers.logger.info("[HV] Resupply: {} id={} heading to guild hall",
+                    this.villager.getClass().getSimpleName(), this.villager.getEntityId());
             this.villager.currentActivity = EnumActivity.RETURN;
             return;
         }
         TileEntityChest chest = this.villager.homeGuildHall.getAvailableChest();
         if (chest == null) {
+            HelpfulVillagers.logger.info("[HV] Resupply: {} id={} no available chest in hall, will switch halls",
+                    this.villager.getClass().getSimpleName(), this.villager.getEntityId());
             this.villager.changeGuildHall = true;
             return;
         }
@@ -122,6 +133,8 @@ public class EntityAIGuardResupply extends EntityAIBase {
         if (!this.villager.isFullyArmored()) {
             this.equipArmorFromChests();
             if (!this.villager.isFullyArmored()) {
+                HelpfulVillagers.logger.info("[HV] Resupply: {} id={} armor incomplete after chest search, retry in {}t",
+                        this.villager.getClass().getSimpleName(), this.villager.getEntityId(), FAILED_SEARCH_COOLDOWN);
                 this.armorRetryAt = this.now() + FAILED_SEARCH_COOLDOWN;
             }
         }
@@ -129,6 +142,8 @@ public class EntityAIGuardResupply extends EntityAIBase {
         if (this.villager.needsCombatAmmo()) {
             this.restockAmmo();
             if (this.villager.needsCombatAmmo()) {
+                HelpfulVillagers.logger.info("[HV] Resupply: {} id={} no ammo found in chests, retry in {}t",
+                        this.villager.getClass().getSimpleName(), this.villager.getEntityId(), FAILED_SEARCH_COOLDOWN);
                 this.ammoRetryAt = this.now() + FAILED_SEARCH_COOLDOWN;
             }
         }
@@ -140,6 +155,10 @@ public class EntityAIGuardResupply extends EntityAIBase {
         } else {
             this.villager.queuedOffhand = ItemStack.EMPTY;
         }
+        HelpfulVillagers.logger.info("[HV] Resupply: {} id={} chest pass done (tool={} armored={} ammoNeed={} offhandNeed={})",
+                this.villager.getClass().getSimpleName(), this.villager.getEntityId(),
+                this.villager.hasTool || this.villager.isValidTool(this.villager.getCurrentItem()),
+                this.villager.isFullyArmored(), this.villager.needsCombatAmmo(), this.villager.needsOffhandEquipment());
     }
 
     private boolean needsHealing() {
