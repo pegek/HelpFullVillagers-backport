@@ -390,6 +390,21 @@ pojedynczo z zielonym buildem między klasami.** Skutki:
      changeProfession, przycisk w dialogu, lang, tekstura = wygenerowany recolor villager.png).
   Flagi: przycisk Cleric wystaje pod panel dialogu (kosmetyka); power 30 = mocne enchanty (zamierzone);
   LivingDeathEvent globalny (filtr IMob+server na wejściu). Wymaga smoke-testu.
+- **2026-06-12 (#4)** — **FIXES PO SMOKE-TEŚCIE #2** (z logów `[HV]` + feedback usera, commity
+  `ddac4f3`..`033f814`):
+  1. **🔑 Resupply z pełnych chestów**: `getAvailableChest()` (chest z WOLNYM slotem) bramkował całą
+     pracę przy skrzyniach → pełna, dobrze zaopatrzona skrzynia = archer nie mógł się ubrać (pętla
+     "no available chest, will switch halls" co sekundę). Bramka = istnienie chestów; wolny slot
+     potrzebny tylko do depozytu (pomijany z flagą `depositPossible` gdy wszystkie pełne).
+  2. **Depozyt z progiem**: wyprawa do skrzyni dopiero przy ≥6 zajętych slotach lub pełnej torbie —
+     wcześniej każdy podniesiony item = STORE (walka zawieszona) = "strażnicy chodzą i nie walczą".
+  3. **Revenge przerywa resupply**: zaatakowany strażnik w STORE/RETURN przy zdrowiu ≥50% wraca do
+     IDLE i walczy (retreat przy niskim HP i FOLLOW nieprzerywalne).
+  4. **Patrol**: villageDoors zawiera obie połówki drzwi — górne (y+1/y+2) były wiecznie "unreachable";
+     trasa tylko po dolnych połówkach + check dotarcia poziomy (|dy|≤2.5).
+  5. **Cleric (feedback)**: nocna służba (hook `staysOutdoorsAtNight()` zamiast instanceof w
+     MoveIndoors; guards+cleric true), +2 max HP (22), +15% speed, regen 50% szybszy
+     (hook `getHealInterval()`, 40t).
 - **2026-06-03** — Fish hook ported in code: `EntityFishHookCustom` ma server-authoritative cast/bobber/bite/catch,
   vanilla fishing loot table, rod enchant bonuses, spawn data owner/target; renderer rysuje bobber + linkę.
   `FishHookPacket` nie jest już używany do ręcznego spawnu/despawnu, żeby nie dublować Forge entity tracking.
