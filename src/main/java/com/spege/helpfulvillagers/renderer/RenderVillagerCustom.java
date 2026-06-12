@@ -2,7 +2,6 @@ package com.spege.helpfulvillagers.renderer;
 
 import com.spege.helpfulvillagers.entity.AbstractVillager;
 
-import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.renderer.entity.RenderBiped;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.entity.layers.LayerBipedArmor;
@@ -37,7 +36,7 @@ public class RenderVillagerCustom extends RenderBiped<AbstractVillager> {
     private static final ResourceLocation BUILDER    = new ResourceLocation("helpfulvillagers", "textures/entity/villager/builder.png");
 
     public RenderVillagerCustom(RenderManager renderManager) {
-        super(renderManager, new ModelBiped(0.0f), 0.5f);
+        super(renderManager, new ModelVillagerBiped(0.0f), 0.5f);
         this.addLayer(new LayerBipedArmor(this));
     }
 
