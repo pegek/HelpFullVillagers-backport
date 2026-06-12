@@ -64,6 +64,11 @@ public class EntitySoldier extends AbstractVillager {
     }
 
     @Override
+    public boolean staysOutdoorsAtNight() {
+        return true;
+    }
+
+    @Override
     public ArrayList<BlockPos> getValidCoords() {
         return null;
     }

@@ -63,6 +63,11 @@ public class EntityArcher extends AbstractVillager {
     }
 
     @Override
+    public boolean staysOutdoorsAtNight() {
+        return true;
+    }
+
+    @Override
     public boolean needsCombatAmmo() {
         return !HelpfulVillagers.infiniteArrows && this.inventory.containsItem(new ItemStack(Items.ARROW)) < 0;
     }

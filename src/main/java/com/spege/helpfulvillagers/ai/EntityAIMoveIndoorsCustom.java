@@ -3,8 +3,6 @@ package com.spege.helpfulvillagers.ai;
 import java.util.Random;
 
 import com.spege.helpfulvillagers.entity.AbstractVillager;
-import com.spege.helpfulvillagers.entity.EntityArcher;
-import com.spege.helpfulvillagers.entity.EntitySoldier;
 import com.spege.helpfulvillagers.enums.EnumActivity;
 import com.spege.helpfulvillagers.util.AIHelper;
 
@@ -49,7 +47,7 @@ public class EntityAIMoveIndoorsCustom extends EntityAIBase {
                     this.entityObj.homeGuildHall.doorCoords.getY(), this.entityObj.homeGuildHall.doorCoords.getZ());
             return !this.entityObj.nearHall();
         }
-        if (!(this.entityObj instanceof EntitySoldier || this.entityObj instanceof EntityArcher
+        if (!(this.entityObj.staysOutdoorsAtNight()
                 || this.entityObj.world.isDaytime() && !this.entityObj.world.isRaining()
                 || this.entityObj.world.provider.getDimensionType() == DimensionType.NETHER)) {
             if (this.entityObj.getRNG().nextInt(50) != 0) {

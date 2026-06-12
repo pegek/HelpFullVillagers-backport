@@ -880,6 +880,16 @@ public abstract class AbstractVillager extends EntityVillager {
         return !held.isEmpty() && held.getItem() instanceof ItemBow && !this.needsCombatAmmo();
     }
 
+    /** Professions on night duty (guards, cleric) skip the move-indoors-at-night behaviour. */
+    public boolean staysOutdoorsAtNight() {
+        return false;
+    }
+
+    /** Ticks between passive 0.5 HP heals (see updateHealth); professions may regenerate faster. */
+    protected int getHealInterval() {
+        return 60;
+    }
+
     private void resetArmor() {
         for (int i = 28; i <= InventoryVillager.OFFHAND_SLOT; ++i) {
             ItemStack item = this.inventory.getStackInSlot(i);
@@ -991,7 +1001,7 @@ public abstract class AbstractVillager extends EntityVillager {
 
     private void updateHealth() {
         ++this.healthTicks;
-        if (this.healthTicks == 60) {
+        if (this.healthTicks >= this.getHealInterval()) {
             this.heal(0.5f);
             this.healthTicks = 0;
         }

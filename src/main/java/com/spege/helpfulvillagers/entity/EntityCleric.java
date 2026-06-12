@@ -10,6 +10,7 @@ import com.spege.helpfulvillagers.ai.EntityAIClericSupport;
 import com.spege.helpfulvillagers.ai.EntityAIFollowGuards;
 import com.spege.helpfulvillagers.enums.EnumActivity;
 
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAvoidEntity;
 import net.minecraft.entity.ai.EntityAIRestrictOpenDoor;
 import net.minecraft.entity.monster.EntityMob;
@@ -62,6 +63,27 @@ public class EntityCleric extends AbstractVillager {
         this.searchRadius = 10;
         this.getNewGuildHall();
         this.addThisAI();
+    }
+
+    /** Sturdier and quicker than a regular villager: +2 max health, +15% movement speed. */
+    @Override
+    protected void applyEntityAttributes() {
+        super.applyEntityAttributes();
+        this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(22.0);
+        this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(
+                this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).getBaseValue() * 1.15);
+    }
+
+    /** Night duty: the cleric tends the wounded and gathers drops while the guards fight. */
+    @Override
+    public boolean staysOutdoorsAtNight() {
+        return true;
+    }
+
+    /** Passive regeneration 50% faster than other villagers (0.5 HP per 40t instead of 60t). */
+    @Override
+    protected int getHealInterval() {
+        return 40;
     }
 
     private void addThisAI() {
