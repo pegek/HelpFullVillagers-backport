@@ -190,6 +190,10 @@ robi 1 blok na tick wg harvestTime — wolne dla dużych struktur.
 
 ### ⬜ POZOSTAŁO (Post-port parity)
 - **Opcjonalnie**: spawn eggs dla profesji.
+- **Follow-mode combat** (`EntityAIFollowLeader`) nadal na starych mechanikach instant-shot —
+  przenieść na nowe attack-taski (GuardBowAttack/GuardMeleeAttack) w osobnej sesji.
+- **Generalizacja nowego guard AI na inne profesje** (decyzja usera 2026-06-12): resupply/patrol/
+  attack są już generyczne na AbstractVillager (hooki, bez instanceof) — wpiąć do pozostałych profesji.
 - **Weryfikacja "flag in-game"**: drzwi/pathfinding, flood-fill hal, addItem overflow client-only, ekonomia synchroniczna (hitch na dużych wioskach), getHealth<getHealth/2 dead branch w strażnikach, BlockStem→skan sąsiadów, Miner findMine target rozjazd, infiniteArrows decrement.
 - **Ekspansja (faza 3)**: nowe profesje, rozbudowana ekonomia, refactor struktury pod dodawanie modyfikacji.
 
@@ -322,6 +326,27 @@ pojedynczo z zielonym buildem między klasami.** Skutki:
   vs `decompiled_1_4_0b5` wykryła 6 luk runtime (kod kompilował się, ale Builder był martwy): brak case 9 w
   changeProfession, brak case 10 w guiCommand, brak case 9 w GuildHall.matchesProfession, brak lang, brak item
   modelu active fence, brak receptury craftingu fence. Wszystkie naprawione, build zielony. Wymaga smoke-testu.
+- **2026-06-12** — **GUARD COMBAT REDESIGN (Soldier/Archer) — pełny rewrite w stylu vanilla**
+  (spec: `docs/superpowers/specs/2026-06-12-guard-combat-redesign.md`, commity `2f11500`..`52ba0d8`):
+  1. **Architektura**: monolityczne `EntityAIGuardVillageSoldier/Archer` (zły mutex 2 → wander
+     przejmował navigator w walce; re-path co tick; flat 20 dmg) **usunięte**. Nowe taski:
+     `EntityAIVillageGuardTarget` (targetTasks; leash 16, LOS, predicate creeper-priority dla archera),
+     `EntityAIGuardResupply` (prio 2, mutex 3 — tylko health<50% przerywa walkę),
+     `EntityAIGuardMeleeAttack` (cooldown 20t, dmg z broni, creeper hit-and-run, tarcza),
+     `EntityAIGuardBowAttack` (naciąg setActiveHand, velocity z charge, enchanty Power/Punch/Flame,
+     strafe + kiting <5 bloków; melee fallback = GuardMeleeAttack prio 4),
+     `EntityAIPatrolVillage` (prio 5; obchód po villageDoors, pauzy, timeout 200t/waypoint).
+     Wszystkie generyczne na AbstractVillager (hooki needsCombatAmmo/acceptsOffhandItem/...).
+  2. **lastAggressor** w HelpfulVillage = podpowiedź z expiry 200t + bounds check (nie twardy override).
+  3. **Nowy trigger resupply** (wymóg usera): brak zbroi/narzędzia → aktywna wyprawa do gildii
+     (cooldown 600t po pustych chestach). Świeża profesja → natychmiastowy resupply przez !hasTool.
+  4. **Tarcze Soldiera**: slot offhand 32 (equipment 5→6, stałe w InventoryVillager; InventoryPacket,
+     container/GUI + ramka), mirror do OFFHAND w updateArmor, blokowanie vanilla + override
+     damageShield (zużycie/break), blocked hit nie zużywa zbroi (armor-wear za super.attackEntityFrom),
+     pozyskiwanie: chest gildii → craft queue (queuedOffhand). `ModelVillagerBiped`: pozy
+     BOW_AND_ARROW/BLOCK z hand-active state.
+  5. **Flagi**: shield-blocking u mobów nieużywane przez vanilla (VERIFY in-game); EntityAIFollowLeader
+     na starych mechanikach (TODO); patrol w trudnym terenie (timeout). Build zielony. Wymaga smoke-testu.
 - **2026-06-03** — Fish hook ported in code: `EntityFishHookCustom` ma server-authoritative cast/bobber/bite/catch,
   vanilla fishing loot table, rod enchant bonuses, spawn data owner/target; renderer rysuje bobber + linkę.
   `FishHookPacket` nie jest już używany do ręcznego spawnu/despawnu, żeby nie dublować Forge entity tracking.
