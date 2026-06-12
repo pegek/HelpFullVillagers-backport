@@ -2,11 +2,14 @@ package com.spege.helpfulvillagers.ai;
 
 import com.spege.helpfulvillagers.entity.AbstractVillager;
 import com.spege.helpfulvillagers.enums.EnumActivity;
+import com.spege.helpfulvillagers.inventory.InventoryVillager;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.ai.RandomPositionGenerator;
 import net.minecraft.entity.monster.EntityCreeper;
+import net.minecraft.item.ItemShield;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.Vec3d;
@@ -66,6 +69,7 @@ public class EntityAIGuardMeleeAttack extends EntityAIBase {
     public void resetTask() {
         this.guard.getNavigator().clearPath();
         this.retreatTicks = 0;
+        this.lowerShield();
     }
 
     @Override
@@ -79,6 +83,7 @@ public class EntityAIGuardMeleeAttack extends EntityAIBase {
             --this.attackCooldown;
         }
         if (this.retreatTicks > 0) {
+            this.lowerShield();
             this.continueRetreat(target);
             return;
         }
@@ -91,8 +96,10 @@ public class EntityAIGuardMeleeAttack extends EntityAIBase {
             this.guard.moveTo(target, this.speed);
         }
         double distSq = this.guard.getDistanceSq(target.posX, target.getEntityBoundingBox().minY, target.posZ);
+        this.updateShield(distSq);
         if (distSq <= this.attackReachSq(target) && this.attackCooldown <= 0) {
             this.attackCooldown = ATTACK_INTERVAL;
+            this.lowerShield();
             this.guard.getNavigator().clearPath();
             this.guard.swingArm(EnumHand.MAIN_HAND);
             boolean success = target.attackEntityFrom(
@@ -103,6 +110,30 @@ public class EntityAIGuardMeleeAttack extends EntityAIBase {
                     this.startRetreat(target);
                 }
             }
+        }
+    }
+
+    /**
+     * Holds the offhand shield up while closing in and between swings (the vanilla blocking
+     * mechanics in EntityLivingBase do the damage reduction once the hand is active), and lowers
+     * it for the swing itself.
+     */
+    private void updateShield(double distSq) {
+        ItemStack offhand = this.guard.inventory.getStackInSlot(InventoryVillager.OFFHAND_SLOT);
+        boolean hasShield = !offhand.isEmpty() && offhand.getItem() instanceof ItemShield;
+        // Raise within 6 blocks of the target while the swing is still cooling down.
+        if (hasShield && distSq <= 36.0 && this.attackCooldown > 5) {
+            if (!this.guard.isHandActive()) {
+                this.guard.setActiveHand(EnumHand.OFF_HAND);
+            }
+        } else {
+            this.lowerShield();
+        }
+    }
+
+    private void lowerShield() {
+        if (this.guard.isHandActive() && this.guard.getActiveHand() == EnumHand.OFF_HAND) {
+            this.guard.resetActiveHand();
         }
     }
 

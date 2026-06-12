@@ -133,7 +133,12 @@ public class EntityAIGuardResupply extends EntityAIBase {
             }
         }
         if (this.villager.needsOffhandEquipment()) {
-            this.offhandRetryAt = this.now() + FAILED_SEARCH_COOLDOWN;
+            this.equipOffhand();
+            if (this.villager.needsOffhandEquipment()) {
+                this.offhandRetryAt = this.now() + FAILED_SEARCH_COOLDOWN;
+            }
+        } else {
+            this.villager.queuedOffhand = ItemStack.EMPTY;
         }
     }
 
@@ -242,6 +247,26 @@ public class EntityAIGuardResupply extends EntityAIBase {
             this.villager.queuedTool = lowestItem;
         } else if (equipped) {
             this.villager.queuedTool = ItemStack.EMPTY;
+        }
+    }
+
+    /** Pulls the profession's offhand item (e.g. a shield) from guild chests, else queues a craft. */
+    private void equipOffhand() {
+        for (TileEntityChest chest : this.villager.homeGuildHall.guildChests) {
+            for (int i = 0; i < chest.getSizeInventory(); ++i) {
+                ItemStack chestItem = chest.getStackInSlot(i);
+                if (!chestItem.isEmpty() && this.villager.acceptsOffhandItem(chestItem)) {
+                    // Equipment index 5 = the offhand slot (combined slot 32).
+                    this.villager.inventory.swapEquipment(chest, i, 5);
+                    this.villager.queuedOffhand = ItemStack.EMPTY;
+                    return;
+                }
+            }
+        }
+        ItemStack desired = this.villager.getDesiredOffhandItem();
+        if (!desired.isEmpty() && this.villager.queuedOffhand.isEmpty()) {
+            this.villager.addCraftItem(new CraftItem(desired, this.villager));
+            this.villager.queuedOffhand = desired;
         }
     }
 

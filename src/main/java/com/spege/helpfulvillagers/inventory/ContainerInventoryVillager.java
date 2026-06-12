@@ -8,7 +8,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 
-/** Container backing the villager inventory GUI: 27 main + 5 equipment slots, plus the player inventory. */
+/** Container backing the villager inventory GUI: 27 main + 6 equipment slots, plus the player inventory. */
 @SuppressWarnings("null")
 public class ContainerInventoryVillager extends Container {
     private AbstractVillager villager;
@@ -25,7 +25,7 @@ public class ContainerInventoryVillager extends Container {
                     ++slotIndex;
                 }
             }
-            for (int slot = 0; slot < 5; ++slot) {
+            for (int slot = 0; slot < InventoryVillager.EQUIPMENT_SIZE; ++slot) {
                 this.addSlotToContainer(new Slot(inventoryVillager, slotIndex, slot * 18 + 43, 68));
                 ++slotIndex;
             }
@@ -57,9 +57,9 @@ public class ContainerInventoryVillager extends Container {
             if (slot != null && slot.getHasStack()) {
                 ItemStack slotStack = slot.getStack();
                 transferStack = slotStack.copy();
-                if (slotId < 32
-                        ? !this.mergeItemStack(slotStack, 32, this.inventorySlots.size(), true)
-                        : !this.mergeItemStack(slotStack, 0, 32, false)) {
+                if (slotId < 33
+                        ? !this.mergeItemStack(slotStack, 33, this.inventorySlots.size(), true)
+                        : !this.mergeItemStack(slotStack, 0, 33, false)) {
                     return ItemStack.EMPTY;
                 }
                 if (slotStack.getCount() <= 0) {
@@ -77,7 +77,7 @@ public class ContainerInventoryVillager extends Container {
 
     @Override
     public void onContainerClosed(EntityPlayer player) {
-        for (int i = 27; i < 32; ++i) {
+        for (int i = 27; i < 33; ++i) {
             if (this.villager.inventory.isItemValidForSlot(i, this.getSlot(i).getStack())) {
                 continue;
             }

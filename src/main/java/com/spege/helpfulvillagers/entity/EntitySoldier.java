@@ -7,7 +7,10 @@ import com.spege.helpfulvillagers.ai.EntityAIGuardResupply;
 import com.spege.helpfulvillagers.ai.EntityAIVillageGuardTarget;
 import com.spege.helpfulvillagers.enums.EnumActivity;
 
+import com.spege.helpfulvillagers.inventory.InventoryVillager;
+
 import net.minecraft.init.Items;
+import net.minecraft.item.ItemShield;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.pathfinding.PathNavigateGround;
@@ -62,6 +65,21 @@ public class EntitySoldier extends AbstractVillager {
     @Override
     public boolean isValidTool(ItemStack item) {
         return item.getItem() instanceof ItemSword;
+    }
+
+    @Override
+    public boolean acceptsOffhandItem(ItemStack stack) {
+        return stack.getItem() instanceof ItemShield;
+    }
+
+    @Override
+    public boolean needsOffhandEquipment() {
+        return this.inventory.getStackInSlot(InventoryVillager.OFFHAND_SLOT).isEmpty();
+    }
+
+    @Override
+    public ItemStack getDesiredOffhandItem() {
+        return new ItemStack(Items.SHIELD);
     }
 
     @Override

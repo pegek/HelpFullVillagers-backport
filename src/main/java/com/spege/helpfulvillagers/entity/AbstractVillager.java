@@ -47,7 +47,9 @@ import net.minecraft.entity.passive.EntityVillager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemBow;
+import net.minecraft.item.ItemShield;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.nbt.NBTTagCompound;
@@ -59,6 +61,7 @@ import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -117,6 +120,9 @@ public abstract class AbstractVillager extends EntityVillager {
     public ArrayList<ItemStack> materialsNeeded = new ArrayList<ItemStack>();
     public ArrayList<ItemStack> smeltablesNeeded = new ArrayList<ItemStack>();
     public ItemStack queuedTool = ItemStack.EMPTY;
+    public ItemStack queuedOffhand = ItemStack.EMPTY;
+    /** Set by {@link #damageShield} during super.attackEntityFrom; blocked hits skip armour wear. */
+    private boolean shieldBlockedThisHit;
     public EnumActivity currentActivity;
     public ResourceCluster lastResource;
     public ResourceCluster currentResource;
@@ -756,13 +762,23 @@ public abstract class AbstractVillager extends EntityVillager {
         return false;
     }
 
+    /** Whether the given item may sit in the offhand slot (32); false = slot unused by this profession. */
+    public boolean acceptsOffhandItem(ItemStack stack) {
+        return false;
+    }
+
+    /** The offhand item to queue with the village crafters when none is found in guild chests. */
+    public ItemStack getDesiredOffhandItem() {
+        return ItemStack.EMPTY;
+    }
+
     /** Items the villager keeps when depositing loot at the guild hall (e.g. an archer's arrows). */
     public boolean shouldKeepInInventory(ItemStack stack) {
         return false;
     }
 
     private void resetArmor() {
-        for (int i = 28; i < 32; ++i) {
+        for (int i = 28; i <= InventoryVillager.OFFHAND_SLOT; ++i) {
             ItemStack item = this.inventory.getStackInSlot(i);
             if (this.inventory.isItemValidForSlot(i, item)) {
                 continue;
@@ -867,6 +883,7 @@ public abstract class AbstractVillager extends EntityVillager {
         this.setItemStackToSlot(EntityEquipmentSlot.CHEST, this.inventory.getStackInSlot(29));
         this.setItemStackToSlot(EntityEquipmentSlot.LEGS, this.inventory.getStackInSlot(30));
         this.setItemStackToSlot(EntityEquipmentSlot.FEET, this.inventory.getStackInSlot(31));
+        this.setItemStackToSlot(EntityEquipmentSlot.OFFHAND, this.inventory.getStackInSlot(InventoryVillager.OFFHAND_SLOT));
     }
 
     private void updateHealth() {
@@ -920,14 +937,20 @@ public abstract class AbstractVillager extends EntityVillager {
 
     @Override
     public boolean attackEntityFrom(DamageSource src, float par2) {
-        for (int i = 28; i < 32; ++i) {
-            ItemStack armorPiece = this.inventory.getStackInSlot(i);
-            if (armorPiece.isEmpty()) {
-                continue;
-            }
-            armorPiece.setItemDamage((int) ((float) armorPiece.getItemDamage() + par2));
-            if (armorPiece.getItemDamage() >= armorPiece.getMaxDamage()) {
-                this.inventory.setInventorySlotContents(i, ItemStack.EMPTY);
+        // super first: it decides whether the hit was shield-blocked (damageShield sets the flag),
+        // and a blocked hit must wear the shield instead of the armour pieces.
+        this.shieldBlockedThisHit = false;
+        boolean result = super.attackEntityFrom(src, par2);
+        if (!this.shieldBlockedThisHit) {
+            for (int i = 28; i < 32; ++i) {
+                ItemStack armorPiece = this.inventory.getStackInSlot(i);
+                if (armorPiece.isEmpty()) {
+                    continue;
+                }
+                armorPiece.setItemDamage((int) ((float) armorPiece.getItemDamage() + par2));
+                if (armorPiece.getItemDamage() >= armorPiece.getMaxDamage()) {
+                    this.inventory.setInventorySlotContents(i, ItemStack.EMPTY);
+                }
             }
         }
         if (!this.world.isRemote && this.homeVillage != null
@@ -941,7 +964,32 @@ public abstract class AbstractVillager extends EntityVillager {
                 }
             }
         }
-        return super.attackEntityFrom(src, par2);
+        return result;
+    }
+
+    /**
+     * Vanilla only wears shields down for players ({@code EntityLivingBase}'s version is a no-op),
+     * so mirror EntityPlayer's behaviour for the villager's offhand shield. Called by the vanilla
+     * blocking path in {@code EntityLivingBase.attackEntityFrom} when a hit is blocked.
+     */
+    @Override
+    protected void damageShield(float damage) {
+        this.shieldBlockedThisHit = true;
+        if (damage < 3.0f || this.world.isRemote) {
+            return;
+        }
+        ItemStack shield = this.inventory.getStackInSlot(InventoryVillager.OFFHAND_SLOT);
+        if (shield.isEmpty() || !(shield.getItem() instanceof ItemShield)) {
+            return;
+        }
+        int wear = 1 + MathHelper.floor(damage);
+        shield.setItemDamage(shield.getItemDamage() + wear);
+        if (shield.getItemDamage() >= shield.getMaxDamage()) {
+            this.inventory.setInventorySlotContents(InventoryVillager.OFFHAND_SLOT, ItemStack.EMPTY);
+            this.resetActiveHand();
+            this.world.playSound(null, this.posX, this.posY, this.posZ, SoundEvents.ITEM_SHIELD_BREAK,
+                    SoundCategory.NEUTRAL, 0.8f, 0.8f + this.getRNG().nextFloat() * 0.4f);
+        }
     }
 
     public void getNewHomeVillage() {

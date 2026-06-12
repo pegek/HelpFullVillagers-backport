@@ -23,8 +23,9 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 
 /**
- * The villager's backing inventory: 27 main slots + 5 equipment slots (0 = held tool,
- * 1-4 = armour). Also accumulates gathered materials/smeltables during a craft job.
+ * The villager's backing inventory: 27 main slots + 6 equipment slots (0 = held tool,
+ * 1-4 = armour, 5 = offhand, e.g. a soldier's shield). Also accumulates gathered
+ * materials/smeltables during a craft job.
  *
  * <p>1.12.2 migration: all slot storage uses {@link ItemStack#EMPTY} instead of null,
  * and the IInventory contract gained isEmpty()/getField/setField/clear()/getDisplayName()
@@ -32,6 +33,11 @@ import net.minecraft.util.text.TextComponentString;
  */
 @SuppressWarnings("null")
 public class InventoryVillager implements IInventory {
+    public static final int MAIN_SIZE = 27;
+    public static final int EQUIPMENT_SIZE = 6;
+    /** Combined slot index of the offhand equipment slot (equipment index 5). */
+    public static final int OFFHAND_SLOT = 32;
+
     private final ItemStack[] mainInventory;
     private final ItemStack[] equipmentInventory;
     public ArrayList<ItemStack> materialsCollected = new ArrayList<ItemStack>();
@@ -49,11 +55,11 @@ public class InventoryVillager implements IInventory {
 
     @Override
     public int getSizeInventory() {
-        return 27;
+        return MAIN_SIZE;
     }
 
     public int getSizeEquipment() {
-        return 5;
+        return EQUIPMENT_SIZE;
     }
 
     @Override
@@ -169,6 +175,9 @@ public class InventoryVillager implements IInventory {
         if (slot == 31) {
             return stack.getItem() instanceof ItemArmor
                     && ((ItemArmor) stack.getItem()).armorType == EntityEquipmentSlot.FEET;
+        }
+        if (slot == OFFHAND_SLOT) {
+            return this.owner.acceptsOffhandItem(stack);
         }
         return true;
     }

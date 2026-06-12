@@ -48,6 +48,10 @@ public class GuiVillagerInventory extends GuiContainer {
         int y = (this.height - this.ySize) / 2;
         this.drawTexturedModalRect(x, y, 0, 0, this.xSizeOfTexture, this.ySizeOfTexture);
 
+        // Offhand slot (32) frame — the background texture predates the slot, so reuse the
+        // tool slot's empty frame graphic (an 18x18 region starting one pixel around the item area).
+        this.drawTexturedModalRect(x + 132, y + 67, 42, 67, 18, 18);
+
         // Armor slot silhouettes when empty (slots 28–31)
         if (this.villager.inventory.getStackInSlot(28).isEmpty()) {
             this.drawTexturedModalRect(x + 64, y + 72, 176, 0, 10, 9);

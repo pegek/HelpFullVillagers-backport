@@ -1,6 +1,7 @@
 package com.spege.helpfulvillagers.network;
 
 import com.spege.helpfulvillagers.entity.AbstractVillager;
+import com.spege.helpfulvillagers.inventory.InventoryVillager;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -11,12 +12,12 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
 
-/** Server -> client: syncs a villager's 27-slot main inventory and/or 5-slot equipment. */
+/** Server -> client: syncs a villager's 27-slot main inventory and/or 6-slot equipment. */
 public class InventoryPacket implements IMessage {
     private int id;
-    private ItemStack[] main = new ItemStack[27];
+    private ItemStack[] main = new ItemStack[InventoryVillager.MAIN_SIZE];
     private boolean sendMain;
-    private ItemStack[] equipment = new ItemStack[5];
+    private ItemStack[] equipment = new ItemStack[InventoryVillager.EQUIPMENT_SIZE];
     private boolean sendEquip;
 
     public InventoryPacket() {
