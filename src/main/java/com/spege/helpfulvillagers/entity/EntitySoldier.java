@@ -2,7 +2,9 @@ package com.spege.helpfulvillagers.entity;
 
 import java.util.ArrayList;
 
-import com.spege.helpfulvillagers.ai.EntityAIGuardVillageSoldier;
+import com.spege.helpfulvillagers.ai.EntityAIGuardMeleeAttack;
+import com.spege.helpfulvillagers.ai.EntityAIGuardResupply;
+import com.spege.helpfulvillagers.ai.EntityAIVillageGuardTarget;
 import com.spege.helpfulvillagers.enums.EnumActivity;
 
 import net.minecraft.init.Items;
@@ -42,7 +44,9 @@ public class EntitySoldier extends AbstractVillager {
         if (this.getNavigator() instanceof PathNavigateGround) {
             ((PathNavigateGround) this.getNavigator()).setBreakDoors(false);
         }
-        this.tasks.addTask(2, new EntityAIGuardVillageSoldier(this));
+        this.targetTasks.addTask(1, new EntityAIVillageGuardTarget(this));
+        this.tasks.addTask(2, new EntityAIGuardResupply(this));
+        this.tasks.addTask(3, new EntityAIGuardMeleeAttack(this));
     }
 
     @Override
