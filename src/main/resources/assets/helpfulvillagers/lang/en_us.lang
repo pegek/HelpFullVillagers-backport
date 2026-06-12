@@ -12,6 +12,7 @@ entity.helpfulvillagers.merchant.name=Merchant
 entity.helpfulvillagers.fisherman.name=Fisherman
 entity.helpfulvillagers.rancher.name=Rancher
 entity.helpfulvillagers.builder.name=Builder
+entity.helpfulvillagers.cleric.name=Cleric
 entity.helpfulvillagers.fish_hook.name=Fish Hook
 
 # Blocks

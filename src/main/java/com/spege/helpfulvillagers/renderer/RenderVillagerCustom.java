@@ -34,6 +34,7 @@ public class RenderVillagerCustom extends RenderBiped<AbstractVillager> {
     private static final ResourceLocation FISHERMAN  = new ResourceLocation("helpfulvillagers", "textures/entity/villager/fisherman.png");
     private static final ResourceLocation RANCHER    = new ResourceLocation("helpfulvillagers", "textures/entity/villager/rancher.png");
     private static final ResourceLocation BUILDER    = new ResourceLocation("helpfulvillagers", "textures/entity/villager/builder.png");
+    private static final ResourceLocation CLERIC     = new ResourceLocation("helpfulvillagers", "textures/entity/villager/cleric.png");
 
     public RenderVillagerCustom(RenderManager renderManager) {
         super(renderManager, new ModelVillagerBiped(0.0f), 0.5f);
@@ -56,6 +57,7 @@ public class RenderVillagerCustom extends RenderBiped<AbstractVillager> {
             case 7:  return FISHERMAN;
             case 8:  return RANCHER;
             case 9:  return BUILDER;
+            case 10: return CLERIC;
             default: return VILLAGER;
         }
     }
