@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.spege.helpfulvillagers.ai.EntityAIGuardMeleeAttack;
 import com.spege.helpfulvillagers.ai.EntityAIGuardResupply;
+import com.spege.helpfulvillagers.ai.EntityAIPatrolVillage;
 import com.spege.helpfulvillagers.ai.EntityAIVillageGuardTarget;
 import com.spege.helpfulvillagers.enums.EnumActivity;
 
@@ -50,6 +51,8 @@ public class EntitySoldier extends AbstractVillager {
         this.targetTasks.addTask(1, new EntityAIVillageGuardTarget(this));
         this.tasks.addTask(2, new EntityAIGuardResupply(this));
         this.tasks.addTask(3, new EntityAIGuardMeleeAttack(this));
+        // Priority 5: below combat/resupply, above wander, so idle guards walk their rounds.
+        this.tasks.addTask(5, new EntityAIPatrolVillage(this));
     }
 
     @Override

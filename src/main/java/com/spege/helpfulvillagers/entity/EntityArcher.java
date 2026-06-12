@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.spege.helpfulvillagers.ai.EntityAIGuardBowAttack;
 import com.spege.helpfulvillagers.ai.EntityAIGuardMeleeAttack;
 import com.spege.helpfulvillagers.ai.EntityAIGuardResupply;
+import com.spege.helpfulvillagers.ai.EntityAIPatrolVillage;
 import com.spege.helpfulvillagers.ai.EntityAIVillageGuardTarget;
 import com.spege.helpfulvillagers.enums.EnumActivity;
 import com.spege.helpfulvillagers.main.HelpfulVillagers;
@@ -52,6 +53,8 @@ public class EntityArcher extends AbstractVillager {
         this.tasks.addTask(3, new EntityAIGuardBowAttack(this));
         // Melee fallback: runs only when the bow task cannot (no bow / out of arrows).
         this.tasks.addTask(4, new EntityAIGuardMeleeAttack(this));
+        // Priority 5: below combat/resupply, above wander, so idle guards walk their rounds.
+        this.tasks.addTask(5, new EntityAIPatrolVillage(this));
     }
 
     @Override
