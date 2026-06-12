@@ -904,6 +904,7 @@ public abstract class AbstractVillager extends EntityVillager {
                 EntityLivingBase attacker = (EntityLivingBase) entity;
                 if (attacker instanceof IMob && attacker.isEntityAlive()) {
                     this.homeVillage.lastAggressor = attacker;
+                    this.homeVillage.lastAggressorTime = this.world.getTotalWorldTime();
                 }
             }
         }

@@ -68,6 +68,12 @@ public class HelpfulVillage {
     public int maxZ;
     public boolean dayCheck;
     public EntityLivingBase lastAggressor;
+    /** World time when {@link #lastAggressor} last attacked a villager; used to expire the memory. */
+    public long lastAggressorTime;
+    /** How long (ticks) the village remembers an aggressor that has not attacked since. */
+    public static final int AGGRESSOR_MEMORY_TICKS = 200;
+    /** Blocks beyond actualBounds in which guards detect and engage hostiles. */
+    public static final int AGGRESSOR_SEARCH_MARGIN = 8;
     public CraftQueue craftQueue = new CraftQueue();
     public VillageEconomy economy = new VillageEconomy(this, false);
     public boolean priceCalcStarted = false;
@@ -335,11 +341,19 @@ public class HelpfulVillage {
         if (this.actualBounds == null) {
             return null;
         }
-        if (this.lastAggressor != null && this.lastAggressor instanceof IMob && this.lastAggressor.isEntityAlive()) {
-            return this.lastAggressor;
+        AxisAlignedBB guardedBounds = this.actualBounds.grow(AGGRESSOR_SEARCH_MARGIN);
+        // lastAggressor is only a hint, not a hard override: it must be alive, recent and still
+        // near the village. The 1.7.10 original returned it unconditionally while alive, which made
+        // every guard chase one mob (even one that had left the village) and ignore closer threats.
+        if (this.lastAggressor != null) {
+            boolean fresh = this.world.getTotalWorldTime() - this.lastAggressorTime < AGGRESSOR_MEMORY_TICKS;
+            if (!(this.lastAggressor instanceof IMob) || !this.lastAggressor.isEntityAlive()
+                    || !fresh || !guardedBounds.contains(this.lastAggressor.getPositionVector())) {
+                this.lastAggressor = null;
+            }
         }
         // IMob is an interface (not an Entity subtype), so query living entities and filter.
-        List<EntityLivingBase> entities = this.world.getEntitiesWithinAABB(EntityLivingBase.class, this.actualBounds);
+        List<EntityLivingBase> entities = this.world.getEntitiesWithinAABB(EntityLivingBase.class, guardedBounds);
         double d0 = Double.MAX_VALUE;
         EntityLivingBase target = null;
         for (EntityLivingBase curr : entities) {
@@ -351,6 +365,9 @@ public class HelpfulVillage {
                 d0 = d1;
                 target = curr;
             }
+        }
+        if (target == null) {
+            target = this.lastAggressor;
         }
         return target;
     }
