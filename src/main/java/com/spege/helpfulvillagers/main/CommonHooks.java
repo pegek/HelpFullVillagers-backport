@@ -2,15 +2,19 @@ package com.spege.helpfulvillagers.main;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import com.spege.helpfulvillagers.econ.VillageEconomy;
+import com.spege.helpfulvillagers.entity.EntityCleric;
 import com.spege.helpfulvillagers.entity.EntityRegularVillager;
 import com.spege.helpfulvillagers.village.HelpfulVillage;
 import com.spege.helpfulvillagers.village.HelpfulVillageCollection;
 
 import net.minecraft.entity.item.EntityItemFrame;
+import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.passive.EntityVillager;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -60,6 +64,19 @@ public class CommonHooks {
             if (frame.getDisplayedItem() != null && !frame.getDisplayedItem().isEmpty()) {
                 villageTicks = 1200;
             }
+        }
+    }
+
+    /** Feeds the clerics' kill counters: every hostile death within 16 blocks of a cleric counts. */
+    @SubscribeEvent
+    public void livingDeathEventHandler(LivingDeathEvent event) {
+        if (event.getEntity().world.isRemote || !(event.getEntity() instanceof IMob)) {
+            return;
+        }
+        List<EntityCleric> clerics = event.getEntity().world.getEntitiesWithinAABB(
+                EntityCleric.class, event.getEntity().getEntityBoundingBox().grow(16.0));
+        for (EntityCleric cleric : clerics) {
+            ++cleric.killCounter;
         }
     }
 
