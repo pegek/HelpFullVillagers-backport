@@ -10,7 +10,6 @@ import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.entity.projectile.EntityTippedArrow;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemBow;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.MathHelper;
@@ -144,8 +143,7 @@ public class EntityAIGuardBowAttack extends EntityAIBase {
     }
 
     private boolean canShoot() {
-        ItemStack held = this.guard.getCurrentItem();
-        return !held.isEmpty() && held.getItem() instanceof ItemBow && !this.guard.needsCombatAmmo();
+        return this.guard.canAttackRanged();
     }
 
     private void shoot(EntityLivingBase target, float velocity) {

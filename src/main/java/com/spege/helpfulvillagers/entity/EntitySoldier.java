@@ -10,6 +10,7 @@ import com.spege.helpfulvillagers.enums.EnumActivity;
 
 import com.spege.helpfulvillagers.inventory.InventoryVillager;
 
+import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemShield;
 import net.minecraft.item.ItemStack;
@@ -47,7 +48,10 @@ public class EntitySoldier extends AbstractVillager {
         // No setBreakDoors(false) here: in 1.12.2 that maps to nodeProcessor.setCanOpenDoors(false),
         // making closed wooden doors impassable walls AND disabling EntityAIOpenDoor (it needs a
         // path through the door). addAI() already configures door pathing correctly.
-        this.targetTasks.addTask(1, new EntityAIVillageGuardTarget(this));
+        // Soldiers ignore creepers entirely (melee vs creeper = explosions in the village);
+        // creepers are the archers' job.
+        this.targetTasks.addTask(1, new EntityAIVillageGuardTarget(this, null,
+                e -> !(e instanceof EntityCreeper)));
         this.tasks.addTask(2, new EntityAIGuardResupply(this));
         this.tasks.addTask(3, new EntityAIGuardMeleeAttack(this));
         // Priority 5: below combat/resupply, above wander, so idle guards walk their rounds.

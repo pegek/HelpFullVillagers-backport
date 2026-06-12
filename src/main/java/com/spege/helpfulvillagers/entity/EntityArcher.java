@@ -44,8 +44,11 @@ public class EntityArcher extends AbstractVillager {
 
     private void addThisAI() {
         // No setBreakDoors(false): see EntitySoldier.addThisAI — it would wall off closed doors.
-        // Creepers are the archer's priority target — soldiers ignore them entirely.
-        this.targetTasks.addTask(1, new EntityAIVillageGuardTarget(this, e -> e instanceof EntityCreeper));
+        // Creepers are the archer's priority target, but only while it can actually shoot —
+        // an archer without bow/arrows leaves them alone (soldiers ignore them entirely).
+        this.targetTasks.addTask(1, new EntityAIVillageGuardTarget(this,
+                e -> e instanceof EntityCreeper,
+                e -> !(e instanceof EntityCreeper) || this.canAttackRanged()));
         this.tasks.addTask(2, new EntityAIGuardResupply(this));
         this.tasks.addTask(3, new EntityAIGuardBowAttack(this));
         // Melee fallback: runs only when the bow task cannot (no bow / out of arrows).

@@ -777,6 +777,12 @@ public abstract class AbstractVillager extends EntityVillager {
         return false;
     }
 
+    /** True when this villager holds a bow and has ammunition — i.e. can fight at range right now. */
+    public boolean canAttackRanged() {
+        ItemStack held = this.getCurrentItem();
+        return !held.isEmpty() && held.getItem() instanceof ItemBow && !this.needsCombatAmmo();
+    }
+
     private void resetArmor() {
         for (int i = 28; i <= InventoryVillager.OFFHAND_SLOT; ++i) {
             ItemStack item = this.inventory.getStackInSlot(i);

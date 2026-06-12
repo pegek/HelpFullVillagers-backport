@@ -36,19 +36,27 @@ public class EntityAIVillageGuardTarget extends EntityAITarget {
 
     private final AbstractVillager guard;
     private final Predicate<EntityLivingBase> priorityTarget;
+    /** Hostiles failing this predicate are never targeted (e.g. creepers for melee guards). */
+    private final Predicate<EntityLivingBase> targetFilter;
     private EntityLivingBase candidate;
     private int stuckTicks;
     private double lastDistanceSq;
 
     public EntityAIVillageGuardTarget(AbstractVillager guard) {
-        this(guard, null);
+        this(guard, null, null);
     }
 
-    public EntityAIVillageGuardTarget(AbstractVillager guard, Predicate<EntityLivingBase> priorityTarget) {
+    public EntityAIVillageGuardTarget(AbstractVillager guard, Predicate<EntityLivingBase> priorityTarget,
+            Predicate<EntityLivingBase> targetFilter) {
         super(guard, false, false);
         this.guard = guard;
         this.priorityTarget = priorityTarget;
+        this.targetFilter = targetFilter;
         this.setMutexBits(1);
+    }
+
+    private boolean passesFilter(EntityLivingBase target) {
+        return this.targetFilter == null || this.targetFilter.test(target);
     }
 
     @Override
@@ -57,7 +65,7 @@ public class EntityAIVillageGuardTarget extends EntityAITarget {
             return false;
         }
         EntityLivingBase revenge = this.guard.getRevengeTarget();
-        if (revenge != null && revenge.isEntityAlive() && revenge instanceof IMob) {
+        if (revenge != null && revenge.isEntityAlive() && revenge instanceof IMob && this.passesFilter(revenge)) {
             this.candidate = revenge;
             return true;
         }
@@ -79,7 +87,10 @@ public class EntityAIVillageGuardTarget extends EntityAITarget {
     @Override
     public boolean shouldContinueExecuting() {
         EntityLivingBase target = this.guard.getAttackTarget();
-        if (target == null || !target.isEntityAlive() || !this.isAvailableForCombat()) {
+        if (target == null || !target.isEntityAlive() || !this.isAvailableForCombat()
+                || !this.passesFilter(target)) {
+            // Filter re-check covers state changes mid-fight, e.g. an archer running out of
+            // arrows drops a creeper target instead of falling back to melee against it.
             return false;
         }
         HelpfulVillage village = this.guard.homeVillage;
@@ -134,7 +145,7 @@ public class EntityAIVillageGuardTarget extends EntityAITarget {
         double distVisible = Double.MAX_VALUE;
         double distAny = Double.MAX_VALUE;
         for (EntityLivingBase curr : entities) {
-            if (!(curr instanceof IMob) || !curr.isEntityAlive()) {
+            if (!(curr instanceof IMob) || !curr.isEntityAlive() || !this.passesFilter(curr)) {
                 continue;
             }
             double dist = this.guard.getDistanceSq(curr);
