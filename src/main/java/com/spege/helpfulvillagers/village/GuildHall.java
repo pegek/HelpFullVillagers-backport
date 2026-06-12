@@ -332,6 +332,31 @@ public class GuildHall {
         }
     }
 
+    /** Cleric guild facilities, located by {@link #checkClericFacilities()}. */
+    public BlockPos enchantingTablePos;
+    public BlockPos brewingStandPos;
+
+    /** Locates the cleric guild facilities inside the hall (call before using the positions). */
+    public void checkClericFacilities() {
+        this.enchantingTablePos = null;
+        this.brewingStandPos = null;
+        for (BlockPos currentCoords : this.insideCoords) {
+            Block block = this.blockAt(currentCoords);
+            if (block == Blocks.ENCHANTING_TABLE && this.enchantingTablePos == null) {
+                this.enchantingTablePos = currentCoords;
+            } else if (block == Blocks.BREWING_STAND && this.brewingStandPos == null) {
+                this.brewingStandPos = currentCoords;
+            }
+        }
+    }
+
+    /** True when the hall has everything a cleric needs: a free chest, an enchanting table and a brewing stand. */
+    public boolean hasClericFacilities() {
+        this.checkClericFacilities();
+        return this.enchantingTablePos != null && this.brewingStandPos != null
+                && this.getAvailableChest() != null;
+    }
+
     public void checkChests() {
         this.guildChests.clear();
         for (BlockPos currentCoords : this.insideCoords) {
