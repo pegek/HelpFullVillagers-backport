@@ -27,9 +27,15 @@ public class EntityAIClericRestock extends EntityAIBase {
     private static final int LOW_ESSENCE = 10;
     private static final int WORK_INTERVAL = 20;
 
+    /** Ticks to wait before re-scanning guard guild chests after finding no drops anywhere. */
+    private static final int FORAGE_RETRY_COOLDOWN = 600;
+
     private final EntityCleric cleric;
     private final float speed;
     private int workCooldown;
+    /** Guard-guild chest currently being foraged for mob drops (null = none). */
+    private TileEntityChest forageChest;
+    private long forageRetryAt;
 
     public EntityAIClericRestock(EntityCleric cleric) {
         this.cleric = cleric;
@@ -49,8 +55,16 @@ public class EntityAIClericRestock extends EntityAIBase {
         if (this.cleric.homeGuildHall == null) {
             return false;
         }
-        boolean needsEssence = this.cleric.essence < LOW_ESSENCE && this.cleric.countEssenceItems() > 0;
-        return needsEssence || this.cleric.inventory.isFull();
+        if (this.cleric.inventory.isFull()) {
+            return true;
+        }
+        if (this.cleric.essence >= LOW_ESSENCE) {
+            return false;
+        }
+        // Drops on hand convert right away; otherwise forage the guards' guild chests (their
+        // deposit runs land mob drops there), unless that already came up empty recently.
+        return this.cleric.countEssenceItems() > 0
+                || this.cleric.world.getTotalWorldTime() >= this.forageRetryAt;
     }
 
     @Override
@@ -72,11 +86,14 @@ public class EntityAIClericRestock extends EntityAIBase {
             return false;
         }
         boolean canConvert = this.cleric.countEssenceItems() > 0 && this.cleric.essence < EntityCleric.ESSENCE_CAP;
-        return canConvert || !this.cleric.inventory.isEmpty();
+        boolean wantsForage = this.cleric.essence < LOW_ESSENCE && this.cleric.countEssenceItems() == 0
+                && this.cleric.world.getTotalWorldTime() >= this.forageRetryAt;
+        return canConvert || !this.cleric.inventory.isEmpty() || this.forageChest != null || wantsForage;
     }
 
     @Override
     public void resetTask() {
+        this.forageChest = null;
         if (this.cleric.currentActivity == EnumActivity.STORE) {
             this.cleric.currentActivity = EnumActivity.IDLE;
         }
@@ -88,6 +105,13 @@ public class EntityAIClericRestock extends EntityAIBase {
             return;
         }
         this.workCooldown = WORK_INTERVAL;
+        // Out of drops with low essence: raid the guards' guild chests for mob drops first.
+        if (this.cleric.essence < LOW_ESSENCE && this.cleric.countEssenceItems() == 0
+                && !this.cleric.inventory.isFull()) {
+            this.forage();
+            return;
+        }
+        this.forageChest = null;
         if (!this.cleric.nearHall()) {
             this.cleric.currentActivity = EnumActivity.RETURN;
             return;
@@ -111,6 +135,73 @@ public class EntityAIClericRestock extends EntityAIBase {
             return;
         }
         this.depositSurplus();
+    }
+
+    /**
+     * Withdraws essence-convertible mob drops from the Soldier/Archer guild chests (their deposit
+     * runs land mob loot there). The next pass converts them at the cleric's own brewing stand.
+     */
+    private void forage() {
+        if (this.forageChest == null || this.forageChest.isInvalid()) {
+            this.forageChest = this.findGuardHallDropChest();
+            if (this.forageChest == null) {
+                this.forageRetryAt = this.cleric.world.getTotalWorldTime() + FORAGE_RETRY_COOLDOWN;
+                HelpfulVillagers.logger.info("[HV] ClericRestock: id={} no mob drops in guard guild chests, retry in {}t",
+                        this.cleric.getEntityId(), FORAGE_RETRY_COOLDOWN);
+                this.cleric.currentActivity = EnumActivity.IDLE;
+                return;
+            }
+            HelpfulVillagers.logger.info("[HV] ClericRestock: id={} foraging drops from guard chest at {}",
+                    this.cleric.getEntityId(), this.forageChest.getPos());
+        }
+        BlockPos pos = this.forageChest.getPos();
+        if (AIHelper.findDistance((int) this.cleric.posX, pos.getX()) > 2
+                || AIHelper.findDistance((int) this.cleric.posY, pos.getY()) > 2
+                || AIHelper.findDistance((int) this.cleric.posZ, pos.getZ()) > 2) {
+            this.cleric.moveTo(pos, this.speed);
+            return;
+        }
+        int collected = 0;
+        for (int i = 0; i < this.forageChest.getSizeInventory(); ++i) {
+            if (this.cleric.essence + this.cleric.countEssenceItems() >= EntityCleric.ESSENCE_CAP
+                    || this.cleric.inventory.isFull()) {
+                break;
+            }
+            ItemStack stack = this.forageChest.getStackInSlot(i);
+            if (stack.isEmpty() || !EntityCleric.ESSENCE_ITEMS.contains(stack.getItem())) {
+                continue;
+            }
+            collected += stack.getCount();
+            this.cleric.inventory.addItem(stack);
+            this.forageChest.setInventorySlotContents(i, ItemStack.EMPTY);
+        }
+        this.forageChest.markDirty();
+        this.forageChest = null;
+        this.cleric.inventory.syncInventory();
+        HelpfulVillagers.logger.info("[HV] ClericRestock: id={} collected {} drops from guard guild chest",
+                this.cleric.getEntityId(), collected);
+    }
+
+    /** First guard-guild (soldier/archer) chest in the village that holds an essence item. */
+    private TileEntityChest findGuardHallDropChest() {
+        if (this.cleric.homeVillage == null) {
+            return null;
+        }
+        for (com.spege.helpfulvillagers.village.GuildHall hall : this.cleric.homeVillage.guildHallList) {
+            if (hall.typeNum != 4 && hall.typeNum != 5) {
+                continue;
+            }
+            hall.checkChests();
+            for (TileEntityChest chest : hall.guildChests) {
+                for (int i = 0; i < chest.getSizeInventory(); ++i) {
+                    ItemStack stack = chest.getStackInSlot(i);
+                    if (!stack.isEmpty() && EntityCleric.ESSENCE_ITEMS.contains(stack.getItem())) {
+                        return chest;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     /** Turns whitelisted drops in the main inventory into essence, with brew sound + particles. */
