@@ -6,6 +6,7 @@ import com.spege.helpfulvillagers.entity.AbstractVillager;
 import com.spege.helpfulvillagers.enums.EnumActivity;
 import com.spege.helpfulvillagers.main.HelpfulVillagers;
 
+import net.minecraft.block.BlockDoor;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.util.math.BlockPos;
 
@@ -108,13 +109,24 @@ public class EntityAIPatrolVillage extends EntityAIBase {
             this.advance();
             return;
         }
-        if (this.guard.getDistanceSq(waypoint) <= WAYPOINT_REACHED_SQ) {
+        if (this.isAtWaypoint(waypoint)) {
             this.guard.getNavigator().clearPath();
             this.pauseTicks = 60 + this.guard.getRNG().nextInt(41);
         } else if (--this.repathDelay <= 0) {
             this.repathDelay = 20;
             this.guard.moveTo(waypoint, this.speed);
         }
+    }
+
+    /**
+     * Horizontal-distance arrival check: door waypoints can sit 1-2 blocks above the guard's feet
+     * (stairs, porches), and a strict 3D radius made such stops register as "unreachable" forever.
+     */
+    private boolean isAtWaypoint(BlockPos waypoint) {
+        double dx = this.guard.posX - (waypoint.getX() + 0.5);
+        double dz = this.guard.posZ - (waypoint.getZ() + 0.5);
+        double dy = Math.abs(this.guard.posY - waypoint.getY());
+        return dx * dx + dz * dz <= WAYPOINT_REACHED_SQ && dy <= 2.5;
     }
 
     private void advance() {
@@ -131,7 +143,14 @@ public class EntityAIPatrolVillage extends EntityAIBase {
      */
     private void buildRoute() {
         this.route.clear();
-        ArrayList<BlockPos> remaining = new ArrayList<BlockPos>(this.guard.homeVillage.villageDoors);
+        // villageDoors contains both door halves (and stacked detections); patrol only the bottom
+        // halves — upper halves float 1-2 blocks up and were endlessly skipped as unreachable.
+        ArrayList<BlockPos> remaining = new ArrayList<BlockPos>();
+        for (BlockPos door : this.guard.homeVillage.villageDoors) {
+            if (!(this.guard.world.getBlockState(door.down()).getBlock() instanceof BlockDoor)) {
+                remaining.add(door);
+            }
+        }
         if (remaining.size() > MAX_WAYPOINTS) {
             ArrayList<BlockPos> sampled = new ArrayList<BlockPos>(MAX_WAYPOINTS);
             double step = (double) remaining.size() / MAX_WAYPOINTS;

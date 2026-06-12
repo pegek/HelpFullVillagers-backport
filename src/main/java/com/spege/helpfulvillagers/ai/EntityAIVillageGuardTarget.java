@@ -62,11 +62,29 @@ public class EntityAIVillageGuardTarget extends EntityAITarget {
 
     @Override
     public boolean shouldExecute() {
-        if (this.guard.world.isRemote || this.guard.isChild() || !this.isAvailableForCombat()) {
+        if (this.guard.world.isRemote || this.guard.isChild()) {
             return false;
         }
         EntityLivingBase revenge = this.guard.getRevengeTarget();
-        if (revenge != null && revenge.isEntityAlive() && revenge instanceof IMob && this.passesFilter(revenge)) {
+        boolean revengeValid = revenge != null && revenge.isEntityAlive() && revenge instanceof IMob
+                && this.passesFilter(revenge);
+        if (!this.isAvailableForCombat()) {
+            // Being attacked overrides an equipment/deposit trip (STORE/RETURN) as long as the
+            // guard is healthy — without this, guards mid-resupply just soaked hits and "wandered
+            // around not fighting back". The low-health retreat and FOLLOW mode stay uninterrupted.
+            boolean onSupplyRun = this.guard.currentActivity == EnumActivity.STORE
+                    || this.guard.currentActivity == EnumActivity.RETURN;
+            if (revengeValid && onSupplyRun
+                    && this.guard.getHealth() >= this.guard.getMaxHealth() / 2.0f) {
+                HelpfulVillagers.logger.info("[HV] GuardTarget: {} id={} attacked by {} mid-resupply - fighting back",
+                        this.guard.getClass().getSimpleName(), this.guard.getEntityId(), revenge.getName());
+                this.guard.currentActivity = EnumActivity.IDLE;
+                this.candidate = revenge;
+                return true;
+            }
+            return false;
+        }
+        if (revengeValid) {
             this.candidate = revenge;
             return true;
         }
