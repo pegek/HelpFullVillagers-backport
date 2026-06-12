@@ -1,6 +1,6 @@
 # Cleric Profession — design spec
 
-Date: 2026-06-12. Status: approved by user, pending implementation.
+Date: 2026-06-12. Status: **implemented** (commits `3b98176`..`6f30aa7`), pending in-game smoke test.
 Plan: `docs/superpowers/plans/2026-06-12-cleric-profession.md`.
 
 ## Concept

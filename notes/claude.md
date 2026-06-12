@@ -372,6 +372,24 @@ pojedynczo z zielonym buildem między klasami.** Skutki:
      (`attemptTeleport`, 16 prób). Wyjątki: noc, handel z graczem, walka, FOLLOW, praca stacjonarna
      (hook `isStationaryJob()`; Fisherman=true podczas łowienia). Logi `[HV] Unstuck` = detektor
      pozostałych bugów pathingu.
+- **2026-06-12 (#3)** — **NOWA PROFESJA: CLERIC (id/typeNum 10)** — pierwsza profesja fazy ekspansji
+  (spec: `docs/superpowers/specs/2026-06-12-cleric-profession-design.md`, plan:
+  `docs/superpowers/plans/2026-06-12-cleric-profession.md`, commity `3b98176`..`6f30aa7`):
+  1. **Gildia**: ramka z Bottle o' Enchanting (matchesProfession case 10); hala funkcjonalna wymaga
+     chest + enchanting table + brewing stand (`GuildHall.checkClericFacilities/hasClericFacilities`).
+  2. **Esencja**: whitelist dropów (rotten flesh/bone/string/gunpowder/spider eye/slime ball) →
+     konwersja 1:1 przy brewing standzie (cap 64, NBT), nadwyżka do chestu (`EntityAIClericRestock`).
+  3. **Heal/cleanse** (`EntityAIClericSupport`): <40% HP → prawdziwy splash potion (IH I ~3HP +
+     Regen ~2HP), koszt 2, cd 15 s; negatywne efekty → cleanse z particles+chime, koszt 3, cd 30 s.
+  4. **Kill counter + blessing**: `LivingDeathEvent` (IMob, 16 bloków) → licznik per cleric (NBT);
+     drabinka 15/50/100 → enchant 1/2/3 najlepszych NIEenchantowanych itemów strażników na power
+     5/15/30 **+ naprawa do full durability**; po tier 3 reset. Wymaga enchanting table w gildii.
+  5. **EntityAIFollowGuards**: bezczynny cleric trzyma się ~5 bloków od Soldiers/Archers; strażnicy
+     oddają mu dropy (transfer co 2 s w promieniu 3). Zmniejszony promień paniki (4 zamiast 8).
+  6. Plumbing wg checklisty z fazy Buildera (rejestracja encji id 10, renderer w preInit,
+     changeProfession, przycisk w dialogu, lang, tekstura = wygenerowany recolor villager.png).
+  Flagi: przycisk Cleric wystaje pod panel dialogu (kosmetyka); power 30 = mocne enchanty (zamierzone);
+  LivingDeathEvent globalny (filtr IMob+server na wejściu). Wymaga smoke-testu.
 - **2026-06-03** — Fish hook ported in code: `EntityFishHookCustom` ma server-authoritative cast/bobber/bite/catch,
   vanilla fishing loot table, rod enchant bonuses, spawn data owner/target; renderer rysuje bobber + linkę.
   `FishHookPacket` nie jest już używany do ręcznego spawnu/despawnu, żeby nie dublować Forge entity tracking.
