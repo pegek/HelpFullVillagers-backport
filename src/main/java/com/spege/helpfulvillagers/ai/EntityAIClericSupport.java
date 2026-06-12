@@ -335,6 +335,9 @@ public class EntityAIClericSupport extends EntityAIBase {
         for (AbstractVillager owner : blessed) {
             ((WorldServer) this.cleric.world).spawnParticle(EnumParticleTypes.ENCHANTMENT_TABLE,
                     owner.posX, owner.posY + 1.2, owner.posZ, 20, 0.5, 0.7, 0.5, 0.1);
+            // The 1.12 enchanting-table chime, played at each blessed guard.
+            this.cleric.world.playSound(null, owner.posX, owner.posY, owner.posZ,
+                    SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.NEUTRAL, 1.0f, 1.0f);
             owner.inventory.syncInventory();
         }
         this.cleric.world.playSound(null, this.cleric.posX, this.cleric.posY, this.cleric.posZ,
