@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.spege.helpfulvillagers.ai.EntityAIClericRestock;
 import com.spege.helpfulvillagers.ai.EntityAIClericSupport;
+import com.spege.helpfulvillagers.ai.EntityAIFollowGuards;
 import com.spege.helpfulvillagers.enums.EnumActivity;
 
 import net.minecraft.entity.ai.EntityAIAvoidEntity;
@@ -69,6 +70,7 @@ public class EntityCleric extends AbstractVillager {
         this.tasks.addTask(1, new EntityAIAvoidEntity<EntityMob>(this, EntityMob.class, 4.0f, 0.5, 0.6));
         this.tasks.addTask(2, new EntityAIClericSupport(this));
         this.tasks.addTask(3, new EntityAIClericRestock(this));
+        this.tasks.addTask(4, new EntityAIFollowGuards(this));
         this.tasks.addTask(5, new EntityAIRestrictOpenDoor(this));
     }
 
