@@ -18,7 +18,6 @@ import net.minecraft.item.ItemPickaxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -135,9 +134,8 @@ public class EntityMiner extends AbstractVillager {
     }
 
     private void addThisAI() {
-        if (this.getNavigator() instanceof PathNavigateGround) {
-            ((PathNavigateGround) this.getNavigator()).setBreakDoors(true);
-        }
+        // Door pathing is configured once in AbstractVillager.addAI(); the per-profession
+        // setBreakDoors overrides were removed (1.12.2 semantics: canOpenDoors).
         this.tasks.addTask(1, new EntityAIAvoidEntity<EntityMob>(this, EntityMob.class, 8.0f, 0.3, 0.35));
         this.tasks.addTask(2, new EntityAIMiner(this));
         this.tasks.addTask(3, new EntityAIRestrictOpenDoor(this));

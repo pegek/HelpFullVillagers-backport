@@ -54,7 +54,7 @@ public class EntityBuilder extends AbstractVillager {
     }
 
     private void addThisAI() {
-        ((net.minecraft.pathfinding.PathNavigateGround)this.getNavigator()).setBreakDoors(false);
+        // No setBreakDoors(false): see EntitySoldier.addThisAI — it would wall off closed doors.
         this.tasks.addTask(1, new EntityAIAvoidEntity<EntityMob>(this, EntityMob.class, 8.0f, 0.3D, 0.35D));
         this.tasks.addTask(2, new EntityAIBuilder(this));
         this.tasks.addTask(3, new EntityAIRestrictOpenDoor(this));

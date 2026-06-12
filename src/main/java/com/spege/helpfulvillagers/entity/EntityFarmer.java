@@ -15,7 +15,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemHoe;
 import net.minecraft.item.ItemStack;
-import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -65,9 +64,7 @@ public class EntityFarmer extends AbstractVillager {
     }
 
     private void addThisAI() {
-        if (this.getNavigator() instanceof PathNavigateGround) {
-            ((PathNavigateGround) this.getNavigator()).setBreakDoors(false);
-        }
+        // No setBreakDoors(false): see EntitySoldier.addThisAI — it would wall off closed doors.
         this.tasks.addTask(1, new EntityAIAvoidEntity<EntityMob>(this, EntityMob.class, 8.0f, 0.3, 0.35));
         this.tasks.addTask(2, new EntityAIFarmer(this));
         this.tasks.addTask(3, new EntityAIRestrictOpenDoor(this));

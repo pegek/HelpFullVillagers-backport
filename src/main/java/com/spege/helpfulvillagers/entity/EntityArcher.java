@@ -14,7 +14,6 @@ import net.minecraft.entity.monster.EntityCreeper;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemBow;
 import net.minecraft.item.ItemStack;
-import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -44,10 +43,8 @@ public class EntityArcher extends AbstractVillager {
     }
 
     private void addThisAI() {
-        if (this.getNavigator() instanceof PathNavigateGround) {
-            ((PathNavigateGround) this.getNavigator()).setBreakDoors(false);
-        }
-        // Creepers are the archer's priority target — soldiers only fight them hit-and-run.
+        // No setBreakDoors(false): see EntitySoldier.addThisAI — it would wall off closed doors.
+        // Creepers are the archer's priority target — soldiers ignore them entirely.
         this.targetTasks.addTask(1, new EntityAIVillageGuardTarget(this, e -> e instanceof EntityCreeper));
         this.tasks.addTask(2, new EntityAIGuardResupply(this));
         this.tasks.addTask(3, new EntityAIGuardBowAttack(this));

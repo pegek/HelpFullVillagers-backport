@@ -14,7 +14,6 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemShield;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
-import net.minecraft.pathfinding.PathNavigateGround;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -45,9 +44,9 @@ public class EntitySoldier extends AbstractVillager {
     }
 
     private void addThisAI() {
-        if (this.getNavigator() instanceof PathNavigateGround) {
-            ((PathNavigateGround) this.getNavigator()).setBreakDoors(false);
-        }
+        // No setBreakDoors(false) here: in 1.12.2 that maps to nodeProcessor.setCanOpenDoors(false),
+        // making closed wooden doors impassable walls AND disabling EntityAIOpenDoor (it needs a
+        // path through the door). addAI() already configures door pathing correctly.
         this.targetTasks.addTask(1, new EntityAIVillageGuardTarget(this));
         this.tasks.addTask(2, new EntityAIGuardResupply(this));
         this.tasks.addTask(3, new EntityAIGuardMeleeAttack(this));
