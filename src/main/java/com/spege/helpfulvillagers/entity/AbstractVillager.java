@@ -620,6 +620,9 @@ public abstract class AbstractVillager extends EntityVillager {
             case 9:
                 replacement = new EntityBuilder(this);
                 break;
+            case 10:
+                replacement = new EntityCleric(this);
+                break;
             default:
                 return;
         }

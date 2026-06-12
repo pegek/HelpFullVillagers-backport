@@ -12,6 +12,7 @@ import com.spege.helpfulvillagers.crafting.VillagerRecipe;
 import com.spege.helpfulvillagers.entity.AbstractVillager;
 import com.spege.helpfulvillagers.entity.EntityArcher;
 import com.spege.helpfulvillagers.entity.EntityBuilder;
+import com.spege.helpfulvillagers.entity.EntityCleric;
 import com.spege.helpfulvillagers.entity.EntityFarmer;
 import com.spege.helpfulvillagers.entity.EntityFishHookCustom;
 import com.spege.helpfulvillagers.entity.EntityFisherman;
@@ -160,7 +161,7 @@ public class HelpfulVillagers {
         // NOTE: entity renderers are registered in ClientProxy.preInit (must run before the
         // RenderManager caches its map); do NOT register them here in init.
         proxy.init(event);
-        logger.info("[HV] init complete — vanillaRecipes={} lumberjack={} miner={} farmer={} fisherman={} rancher={}",
+        logger.info("[HV] init complete 窶・vanillaRecipes={} lumberjack={} miner={} farmer={} fisherman={} rancher={}",
                 vanillaRecipes.size(), lumberjackRecipes.size(), minerRecipes.size(),
                 farmerRecipes.size(), fishermanRecipes.size(), rancherRecipes.size());
     }
@@ -209,6 +210,7 @@ public class HelpfulVillagers {
         this.registerEntity(EntityFisherman.class, "fisherman", 7);
         this.registerEntity(EntityRancher.class, "rancher", 8);
         this.registerEntity(EntityBuilder.class, "builder", 9);
+        this.registerEntity(EntityCleric.class, "cleric", 10);
         this.registerEntity(EntityFishHookCustom.class, "fish_hook", 100);
     }
 

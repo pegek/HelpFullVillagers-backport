@@ -115,6 +115,8 @@ public class GuildHall {
                 return itemStack.getItem() instanceof ItemLead;
             case 9:
                 return itemStack.getItem() instanceof ItemSpade;
+            case 10:
+                return itemStack.getItem().equals(Items.EXPERIENCE_BOTTLE);
         }
         return false;
     }

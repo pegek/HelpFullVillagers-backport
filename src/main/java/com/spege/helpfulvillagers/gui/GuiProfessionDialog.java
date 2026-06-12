@@ -79,6 +79,8 @@ public class GuiProfessionDialog extends GuiScreen {
         this.buttonList.add(new GuiButton(7, posX + 120, posY + 80, 100, 20, "Fisherman"));
         this.buttonList.add(new GuiButton(8, posX + 10, posY + 105, 100, 20, "Rancher"));
         this.buttonList.add(new GuiButton(9, posX + 120, posY + 105, 100, 20, "Builder"));
+        // Third-row button sits just below the 230x130 background panel — cosmetic, flagged in spec.
+        this.buttonList.add(new GuiButton(10, posX + 65, posY + 130, 100, 20, "Cleric"));
     }
 
     @Override

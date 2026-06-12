@@ -2,6 +2,7 @@ package com.spege.helpfulvillagers.main;
 
 import com.spege.helpfulvillagers.entity.EntityArcher;
 import com.spege.helpfulvillagers.entity.EntityBuilder;
+import com.spege.helpfulvillagers.entity.EntityCleric;
 import com.spege.helpfulvillagers.entity.EntityFarmer;
 import com.spege.helpfulvillagers.entity.EntityFishHookCustom;
 import com.spege.helpfulvillagers.entity.EntityFisherman;
@@ -55,7 +56,8 @@ public class ClientProxy extends CommonProxy {
         RenderingRegistry.registerEntityRenderingHandler(EntityFisherman.class,       m -> new RenderVillagerCustom(m));
         RenderingRegistry.registerEntityRenderingHandler(EntityRancher.class,         m -> new RenderVillagerCustom(m));
         RenderingRegistry.registerEntityRenderingHandler(EntityBuilder.class,         m -> new RenderVillagerCustom(m));
+        RenderingRegistry.registerEntityRenderingHandler(EntityCleric.class,          m -> new RenderVillagerCustom(m));
         RenderingRegistry.registerEntityRenderingHandler(EntityFishHookCustom.class, manager -> new RenderFishHookCustom(manager));
-        HelpfulVillagers.logger.info("[HV] registerRenderers: registered 10 entity renderers (preInit)");
+        HelpfulVillagers.logger.info("[HV] registerRenderers: registered 11 entity renderers (preInit)");
     }
 }
