@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.spege.helpfulvillagers.ai.EntityAIClericRestock;
+import com.spege.helpfulvillagers.ai.EntityAIClericSupport;
 import com.spege.helpfulvillagers.enums.EnumActivity;
 
 import net.minecraft.entity.ai.EntityAIAvoidEntity;
@@ -66,6 +67,7 @@ public class EntityCleric extends AbstractVillager {
         // Reduced 4-block panic radius (other professions use 8): the cleric must stay near
         // fights to support the guards, fleeing only from point-blank danger.
         this.tasks.addTask(1, new EntityAIAvoidEntity<EntityMob>(this, EntityMob.class, 4.0f, 0.5, 0.6));
+        this.tasks.addTask(2, new EntityAIClericSupport(this));
         this.tasks.addTask(3, new EntityAIClericRestock(this));
         this.tasks.addTask(5, new EntityAIRestrictOpenDoor(this));
     }
