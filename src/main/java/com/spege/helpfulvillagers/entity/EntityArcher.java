@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.spege.helpfulvillagers.ai.EntityAIGuardVillageArcher;
 import com.spege.helpfulvillagers.enums.EnumActivity;
+import com.spege.helpfulvillagers.main.HelpfulVillagers;
 
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemBow;
@@ -50,15 +51,19 @@ public class EntityArcher extends AbstractVillager {
         return false;
     }
 
-    public boolean isFullyArmored() {
-        for (int i = 28; i < 32; ++i) {
-            ItemStack armorPiece = this.inventory.getStackInSlot(i);
-            if (!armorPiece.isEmpty()) {
-                continue;
-            }
-            return false;
-        }
-        return true;
+    @Override
+    public boolean needsCombatAmmo() {
+        return !HelpfulVillagers.infiniteArrows && this.inventory.containsItem(new ItemStack(Items.ARROW)) < 0;
+    }
+
+    @Override
+    public ItemStack getCombatAmmoItem() {
+        return new ItemStack(Items.ARROW);
+    }
+
+    @Override
+    public boolean shouldKeepInInventory(ItemStack stack) {
+        return !HelpfulVillagers.infiniteArrows && stack.getItem() == Items.ARROW;
     }
 
     @Override

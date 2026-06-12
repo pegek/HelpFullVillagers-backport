@@ -50,17 +50,6 @@ public class EntitySoldier extends AbstractVillager {
         return false;
     }
 
-    public boolean isFullyArmored() {
-        for (int i = 28; i < 32; ++i) {
-            ItemStack armorPiece = this.inventory.getStackInSlot(i);
-            if (!armorPiece.isEmpty()) {
-                continue;
-            }
-            return false;
-        }
-        return true;
-    }
-
     @Override
     public ArrayList<BlockPos> getValidCoords() {
         return null;

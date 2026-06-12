@@ -728,6 +728,39 @@ public abstract class AbstractVillager extends EntityVillager {
         }
     }
 
+    /** True when all four armour slots (28-31) are occupied. */
+    public boolean isFullyArmored() {
+        for (int i = 28; i < 32; ++i) {
+            if (this.inventory.getStackInSlot(i).isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // --- Resupply hooks (EntityAIGuardResupply) -------------------------------------------------
+    // Generic so the resupply AI works on any profession; combat professions override what they need.
+
+    /** True when this villager is out of combat ammunition and should restock at the guild hall. */
+    public boolean needsCombatAmmo() {
+        return false;
+    }
+
+    /** The ammunition item to pull from guild chests when {@link #needsCombatAmmo()}. */
+    public ItemStack getCombatAmmoItem() {
+        return ItemStack.EMPTY;
+    }
+
+    /** True when this villager wants an offhand item (e.g. a soldier's shield) from the guild hall. */
+    public boolean needsOffhandEquipment() {
+        return false;
+    }
+
+    /** Items the villager keeps when depositing loot at the guild hall (e.g. an archer's arrows). */
+    public boolean shouldKeepInInventory(ItemStack stack) {
+        return false;
+    }
+
     private void resetArmor() {
         for (int i = 28; i < 32; ++i) {
             ItemStack item = this.inventory.getStackInSlot(i);
