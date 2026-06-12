@@ -87,6 +87,9 @@ public class GuildHall {
                 this.insideCoords.clear();
                 this.insideCoordsSet.clear();
             }
+            com.spege.helpfulvillagers.main.HelpfulVillagers.logger.info(
+                    "[HV] GuildHall: type={} frame at {} facing={} -> interior {} blocks",
+                    profession, this.getFrameCoords(), itemFrame.facingDirection, this.insideCoords.size());
             break;
         }
     }
@@ -176,26 +179,36 @@ public class GuildHall {
         int dx = this.doorCoords.getX();
         int dy = this.doorCoords.getY();
         int dz = this.doorCoords.getZ();
-        switch (this.itemFrame.getRotation()) {
-            case 0: {
+        // The interior lies BEHIND the wall the frame hangs on, i.e. opposite the frame's facing.
+        // The 1.7.10 original read field_82332_a (hangingDirection); the port mistakenly used
+        // getRotation() — the displayed ITEM's click-rotation, which is 0-7 in 1.12.2 and changes
+        // every time a player right-clicks the frame. Rotations 4-7 hit the default branch and left
+        // the interior empty (door block only), so the hall "had no chests/facilities" — observed
+        // in-game as unarmed archers looping at their guild and clerics never enchanting.
+        EnumFacing facing = this.itemFrame.facingDirection;
+        if (facing == null) {
+            facing = EnumFacing.SOUTH;
+        }
+        switch (facing) {
+            case SOUTH: {
                 BlockPos startCoords = new BlockPos(dx, dy, dz - 1);
                 this.addInsideCoord(new BlockPos(dx, dy, dz + 1));
                 this.checkZDirection(startCoords, -1);
                 break;
             }
-            case 1: {
+            case WEST: {
                 BlockPos startCoords = new BlockPos(dx + 1, dy, dz);
                 this.addInsideCoord(new BlockPos(dx - 1, dy, dz));
                 this.checkXDirection(startCoords, 1);
                 break;
             }
-            case 2: {
+            case NORTH: {
                 BlockPos startCoords = new BlockPos(dx, dy, dz + 1);
                 this.addInsideCoord(new BlockPos(dx, dy, dz - 1));
                 this.checkZDirection(startCoords, 1);
                 break;
             }
-            case 3: {
+            case EAST: {
                 BlockPos startCoords = new BlockPos(dx - 1, dy, dz);
                 this.addInsideCoord(new BlockPos(dx + 1, dy, dz));
                 this.checkXDirection(startCoords, -1);
