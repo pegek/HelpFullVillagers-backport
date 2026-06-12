@@ -405,6 +405,19 @@ pojedynczo z zielonym buildem między klasami.** Skutki:
   5. **Cleric (feedback)**: nocna służba (hook `staysOutdoorsAtNight()` zamiast instanceof w
      MoveIndoors; guards+cleric true), +2 max HP (22), +15% speed, regen 50% szybszy
      (hook `getHealInterval()`, 40t).
+- **2026-06-12 (#5)** — **FIXES PO SMOKE-TEŚCIE #3** (commity `4ae9828`..`e24fbcf`):
+  1. **🔑🔑 Flood-fill hal: rotacja itemu zamiast facing ramki** (`GuildHall.fillInsideCoords`).
+     Oryginał 1.7.10 używał `field_82332_a` = hangingDirection (kierunek zawieszenia ramki 0-3);
+     port błędnie przetłumaczył na `getRotation()` = rotacja ITEMU w ramce (w 1.12.2: 0-7, zmienia
+     się każdym PPM gracza!). Rotacje 4-7 → default → wnętrze hali = sam blok drzwi → "hall has no
+     chests" (archerzy bez sprzętu) ORAZ `hasClericFacilities` puste → cleric nigdy nie enchantował
+     ani nie konwertował esencji. Fix: `itemFrame.facingDirection`, wnętrze naprzeciw facing.
+     Dodany log `[HV] GuildHall: type=... interior N blocks` do weryfikacji.
+     **PUŁAPKA: getRotation() w 1.12.2 to NIE kierunek ramki.**
+  2. **Dźwięk enchantu**: `BLOCK_ENCHANTMENT_TABLE_USE` przy każdym pobłogosławionym strażniku.
+  3. **Cleric forażuje skrzynie gildii Soldier/Archer**: przy niskiej esencji bez dropów na ręce
+     wybiera dropy z chestów hal strażniczych (tam ląduje ich loot z depozytów), konwertuje u siebie;
+     cooldown 600t gdy nigdzie nic nie ma.
 - **2026-06-03** — Fish hook ported in code: `EntityFishHookCustom` ma server-authoritative cast/bobber/bite/catch,
   vanilla fishing loot table, rod enchant bonuses, spawn data owner/target; renderer rysuje bobber + linkę.
   `FishHookPacket` nie jest już używany do ręcznego spawnu/despawnu, żeby nie dublować Forge entity tracking.
