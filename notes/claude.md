@@ -347,6 +347,25 @@ pojedynczo z zielonym buildem między klasami.** Skutki:
      BOW_AND_ARROW/BLOCK z hand-active state.
   5. **Flagi**: shield-blocking u mobów nieużywane przez vanilla (VERIFY in-game); EntityAIFollowLeader
      na starych mechanikach (TODO); patrol w trudnym terenie (timeout). Build zielony. Wymaga smoke-testu.
+- **2026-06-12 (#2)** — **FIXES PO SMOKE-TEŚCIE GUARD AI** (feedback usera + analiza logów):
+  1. **🔑 DRZWI (root cause, zweryfikowany w mapped sources 1.12.2)**: `PathNavigateGround.setBreakDoors(b)`
+     w 1.12.2 to `nodeProcessor.setCanOpenDoors(b)` — czy pathfinder MOŻE planować trasę przez zamknięte
+     drewniane drzwi (`WalkNodeProcessor`: DOOR_WOOD_CLOSED walkable tylko gdy canOpenDoors && canEnterDoors);
+     `EntityAIOpenDoor` odpala się TYLKO gdy aktywna ścieżka przechodzi przez drzwi. Prawie każda profesja
+     nadpisywała `addAI()` przez `setBreakDoors(false)` (kalka z 1.7.10 „nie wyłamuj drzwi") → zamknięte
+     drzwi = ściana + villagerzy nigdy nie otwierali drzwi. Objawy: soldierzy uwięzieni w domu (inny villager
+     zamknął za nimi drzwi — EntityAIOpenDoor closeDoor=true), archerzy nie wchodzili do gildii → brak
+     bow/armor/arrows. **Usunięte wszystkie nadpisania** (9× false, 1× redundantne true w Miner); konfiguracja
+     drzwi tylko w `AbstractVillager.addAI()`. **PUŁAPKA NA PRZYSZŁOŚĆ: nie wołać setBreakDoors(false).**
+  2. **Creepery (decyzja usera)**: hit-and-run nieskuteczny → Soldier ignoruje creepery całkowicie
+     (targetFilter predicate w GuardTarget, też dla revenge + re-check mid-fight); Archer celuje creepery
+     tylko gdy może strzelać (`AbstractVillager.canAttackRanged()`); melee task odmawia creeperów
+     (defense in depth); maszyneria odskoku usunięta.
+  3. **Instrumentacja [HV]**: GuardTarget engage/leash/give-up + powody, Resupply snapshot potrzeb + wynik
+     przejścia po chestach + cooldowny, BowAttack strzały, Shield bloki (weryfikacja damageShield in-game),
+     Patrol start rundy + pominięte waypointy. Pierwszy test był „ślepy" — brak logów w nowych klasach.
+  4. Z logów: skok entity ID (~20/s) = przełączenie peaceful→normal (wyjaśnione przez usera); tempo
+     reprodukcji villagerów — odłożone na życzenie usera.
 - **2026-06-03** — Fish hook ported in code: `EntityFishHookCustom` ma server-authoritative cast/bobber/bite/catch,
   vanilla fishing loot table, rod enchant bonuses, spawn data owner/target; renderer rysuje bobber + linkę.
   `FishHookPacket` nie jest już używany do ręcznego spawnu/despawnu, żeby nie dublować Forge entity tracking.
