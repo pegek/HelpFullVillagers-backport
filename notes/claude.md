@@ -366,6 +366,12 @@ pojedynczo z zielonym buildem między klasami.** Skutki:
      Patrol start rundy + pominięte waypointy. Pierwszy test był „ślepy" — brak logów w nowych klasach.
   4. Z logów: skok entity ID (~20/s) = przełączenie peaceful→normal (wyjaśnione przez usera); tempo
      reprodukcji villagerów — odłożone na życzenie usera.
+  5. **Anti-stuck watchdog (wszyscy villagerzy, wymóg usera)**: `AbstractVillager.updateStuckCheck`
+     (server, co 20t) — kotwica pozycji; ≥2 min w promieniu 5 bloków za dnia → soft reset (IDLE +
+     clearPath + spacer do losowego punktu), ≥3 min → bezpieczny teleport pod centrum wioski
+     (`attemptTeleport`, 16 prób). Wyjątki: noc, handel z graczem, walka, FOLLOW, praca stacjonarna
+     (hook `isStationaryJob()`; Fisherman=true podczas łowienia). Logi `[HV] Unstuck` = detektor
+     pozostałych bugów pathingu.
 - **2026-06-03** — Fish hook ported in code: `EntityFishHookCustom` ma server-authoritative cast/bobber/bite/catch,
   vanilla fishing loot table, rod enchant bonuses, spawn data owner/target; renderer rysuje bobber + linkę.
   `FishHookPacket` nie jest już używany do ręcznego spawnu/despawnu, żeby nie dublować Forge entity tracking.
