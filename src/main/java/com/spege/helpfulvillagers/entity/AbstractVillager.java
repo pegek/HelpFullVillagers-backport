@@ -127,6 +127,10 @@ public abstract class AbstractVillager extends EntityVillager {
     public ResourceCluster lastResource;
     public ResourceCluster currentResource;
     public int villagerID;
+    // Anti-stuck safety net (see updateStuckCheck): position anchor + time spent near it.
+    private BlockPos stuckAnchor;
+    private int stuckTicks;
+    private boolean softUnstuckDone;
 
     public AbstractVillager(World world) {
         super(world);
@@ -419,6 +423,96 @@ public abstract class AbstractVillager extends EntityVillager {
         this.resetTool();
         this.resetArmor();
         this.getCraftItem();
+        this.updateStuckCheck();
+    }
+
+    // --- Anti-stuck safety net -------------------------------------------------------------------
+    // If a villager spends minutes within a few blocks of one spot during the day (micro-movements
+    // and failed navigation attempts included), something is wrong: an AI state machine looped on an
+    // unreachable goal, or the villager is physically trapped. Escalate: soft state reset first,
+    // then a safe teleport to the village as a last resort.
+
+    private static final int STUCK_CHECK_INTERVAL = 20;
+    /** Movement beyond this (squared blocks) from the anchor counts as real progress. */
+    private static final double STUCK_RADIUS_SQ = 25.0;
+    /** Ticks near one spot before the soft reset (2 min). */
+    private static final int SOFT_UNSTUCK_TICKS = 2400;
+    /** Ticks near one spot before the teleport fallback (3 min total). */
+    private static final int TELEPORT_UNSTUCK_TICKS = 3600;
+
+    private void updateStuckCheck() {
+        if (this.world.isRemote || this.ticksExisted % STUCK_CHECK_INTERVAL != 0) {
+            return;
+        }
+        // Situations where standing still is legitimate; don't accumulate stuck time.
+        if (!this.world.isDaytime() || this.getCustomer() != null || this.getAttackTarget() != null
+                || this.currentActivity == EnumActivity.FOLLOW || this.isStationaryJob()) {
+            this.resetStuckTracker();
+            return;
+        }
+        BlockPos pos = this.getCoords();
+        if (this.stuckAnchor == null || pos.distanceSq(this.stuckAnchor) > STUCK_RADIUS_SQ) {
+            this.stuckAnchor = pos;
+            this.stuckTicks = 0;
+            this.softUnstuckDone = false;
+            return;
+        }
+        this.stuckTicks += STUCK_CHECK_INTERVAL;
+        if (!this.softUnstuckDone && this.stuckTicks >= SOFT_UNSTUCK_TICKS) {
+            this.softUnstuckDone = true;
+            this.softUnstuck();
+        } else if (this.stuckTicks >= TELEPORT_UNSTUCK_TICKS) {
+            this.teleportUnstuck();
+            this.resetStuckTracker();
+        }
+    }
+
+    private void resetStuckTracker() {
+        this.stuckAnchor = null;
+        this.stuckTicks = 0;
+        this.softUnstuckDone = false;
+    }
+
+    /** True while this villager's job legitimately keeps it standing in place (e.g. fishing). */
+    public boolean isStationaryJob() {
+        return false;
+    }
+
+    /** Stage 1: rewind the activity state machine and force a short walk to shake loose AI loops. */
+    private void softUnstuck() {
+        HelpfulVillagers.logger.info("[HV] Unstuck: {} id={} idle ~2min at {} (activity={}) - soft reset",
+                this.getClass().getSimpleName(), this.getEntityId(), this.stuckAnchor, this.currentActivity);
+        this.currentActivity = EnumActivity.IDLE;
+        this.getNavigator().clearPath();
+        Vec3d target = RandomPositionGenerator.findRandomTarget(this, 10, 5);
+        if (target != null) {
+            this.getNavigator().tryMoveToXYZ(target.x, target.y, target.z, 0.6);
+        }
+    }
+
+    /** Stage 2: safe teleport near the village centre — frees physically trapped villagers. */
+    private void teleportUnstuck() {
+        if (this.homeVillage == null) {
+            // Without a village there is no sensible destination; retry the soft path instead.
+            this.softUnstuck();
+            return;
+        }
+        BlockPos center = this.homeVillage.getActualCenter();
+        for (int attempt = 0; attempt < 16; ++attempt) {
+            double x = center.getX() + 0.5 + (this.getRNG().nextDouble() - 0.5) * 8.0;
+            double y = center.getY() + this.getRNG().nextInt(7) - 3;
+            double z = center.getZ() + 0.5 + (this.getRNG().nextDouble() - 0.5) * 8.0;
+            // attemptTeleport does its own collision/ground checks and reverts unsafe spots.
+            if (this.attemptTeleport(x, y, z)) {
+                HelpfulVillagers.logger.info("[HV] Unstuck: {} id={} stuck ~3min - teleported to village centre {}",
+                        this.getClass().getSimpleName(), this.getEntityId(), center);
+                this.currentActivity = EnumActivity.IDLE;
+                this.getNavigator().clearPath();
+                return;
+            }
+        }
+        HelpfulVillagers.logger.info("[HV] Unstuck: {} id={} teleport failed (no safe spot near {})",
+                this.getClass().getSimpleName(), this.getEntityId(), center);
     }
 
     public void moveTo(BlockPos coords, float speed) {

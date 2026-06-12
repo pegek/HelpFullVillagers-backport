@@ -73,6 +73,12 @@ public class EntityFisherman extends AbstractVillager {
     }
 
     @Override
+    public boolean isStationaryJob() {
+        // Standing at the water's edge with a cast hook is the job, not being stuck.
+        return this.fishEntity != null;
+    }
+
+    @Override
     public boolean isValidTool(ItemStack item) {
         return item.getItem() instanceof ItemFishingRod;
     }
