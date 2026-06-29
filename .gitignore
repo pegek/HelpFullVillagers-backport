@@ -48,7 +48,15 @@ mcmodsrepo/
 /config/
 /mods/
 
-# Read-only 1.7.10 reference: keep decompiled .java sources + original jar,
-# but ignore the derived intermediates (raw .class dump and the slim classes jar).
-helpfulvillagers/unzipped_classes/
-helpfulvillagers/classes.jar
+# Read-only reference materials for the port (original mod by WeaselNinja):
+# decompiled sources, original jars and decompilation tooling. Kept LOCAL only —
+# not redistributed in this public repo.
+/helpfulvillagers/
+/helpfulvillagers-1.7.10-*.jar
+
+# Local Claude Code permission allowlist (personal, not for the repo)
+.claude/settings.local.json
+
+# Local game logs / crash reports (keep only the filter tooling)
+/notes/logs/*
+!/notes/logs/filter_log.py
